@@ -7,7 +7,7 @@ import 'package:flutter/material.dart';
 class AlumnexIndexPage extends StatefulWidget {
   final String rollno;
   
-  final dynamic roll;
+  final String roll;
   const AlumnexIndexPage({super.key, required this.rollno,required this.roll});
 
   @override
@@ -21,9 +21,12 @@ class _AlumnexIndexPageState extends State<AlumnexIndexPage> {
   int myIndex = 0;
   String pageName = 'Posts';
   late List<Widget> TapsWidgets;
+  
 
   void initState() {
     super.initState();
+    print(widget.rollno);
+    print(widget.roll);
     TapsWidgets = [
     AlumnexPostPage(rollno: widget.rollno,roll : widget.roll),
     AlumnexEventPage(rollno: widget.rollno),

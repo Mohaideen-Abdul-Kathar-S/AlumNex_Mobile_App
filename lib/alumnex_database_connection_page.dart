@@ -6,10 +6,10 @@ import 'dart:io';
 
 class DataBaseConnection {
   Future<String> RegistrationPage(dynamic data) async {
-    print("hello");
+    print("hello.hhghh");
     try {
       final res = await http.post(
-        Uri.parse("http://192.168.157.76:5000/register"),
+        Uri.parse("http://10.149.248.153:5000/register"),
         headers: {"Content-Type": "application/json"},
         body: jsonEncode(data),
       );
@@ -18,13 +18,14 @@ class DataBaseConnection {
     } catch (e) {
       print(e);
     }
+    print("success reg");
     return "success";
   }
 
   Future<int> LoginPage(dynamic data) async {
     try {
       final res = await http.post(
-        Uri.parse("http://192.168.157.76:5000/login"),
+        Uri.parse("http://10.149.248.153:5000/login"),
         headers: {"Content-type": "application/json"},
         body: jsonEncode(data),
       );
@@ -41,7 +42,7 @@ class DataBaseConnection {
   Future<int> updatepersonalinfo(dynamic data) async {
     try {
       final res = await http.post(
-        Uri.parse("http://192.168.157.76:5000/personalinfo"),
+        Uri.parse("http://10.149.248.153:5000/personalinfo"),
         headers: {"Content-type": "application/json"},
         body: jsonEncode(data),
       );
@@ -58,7 +59,7 @@ class DataBaseConnection {
   Future<dynamic> GetPersonInfo(dynamic data) async {
     try {
       final res = await http.post(
-        Uri.parse("http://192.168.157.76:5000/getPersonalInfo"),
+        Uri.parse("http://10.149.248.153:5000/getPersonalInfo"),
         headers: {"Content-type": "application/json"},
         body: jsonEncode(data),
       );
@@ -74,7 +75,7 @@ class DataBaseConnection {
 
   Future<void> uploadProfileImage(File imageFile, String userId) async {
     print("profile image upload");
-    var uri = Uri.parse('http://192.168.157.76:5000/upload-profile');
+    var uri = Uri.parse('http://10.149.248.153:5000/upload-profile');
 
     var request =
         http.MultipartRequest('POST', uri)
@@ -96,20 +97,22 @@ class DataBaseConnection {
     }
   }
 
-
-
   Future<String> uploadResume(File imageFile, String userId) async {
-    var uri = Uri.parse('http://192.168.157.76:5000/upload-Resume');
+    var uri = Uri.parse('http://10.149.248.153:5000/upload-Resume');
 
-    var request = http.MultipartRequest('POST', uri)
-      ..fields['user_id'] = userId
-      ..files.add(
-        await http.MultipartFile.fromPath(
-          'resume',
-          imageFile.path,
-          contentType: MediaType('application', 'pdf'), // Change to 'image/jpeg' if uploading image
-        ),
-      );
+    var request =
+        http.MultipartRequest('POST', uri)
+          ..fields['user_id'] = userId
+          ..files.add(
+            await http.MultipartFile.fromPath(
+              'resume',
+              imageFile.path,
+              contentType: MediaType(
+                'application',
+                'pdf',
+              ), // Change to 'image/jpeg' if uploading image
+            ),
+          );
 
     var response = await request.send();
 
@@ -125,7 +128,7 @@ class DataBaseConnection {
   Future<void> uploadPost(Map<String, dynamic> postData) async {
     var request = http.MultipartRequest(
       'POST',
-      Uri.parse('http://192.168.157.76:5000/upload_post/'),
+      Uri.parse('http://10.149.248.153:5000/upload_post/'),
     );
 
     request.fields['postId'] = postData['postId'];
@@ -161,7 +164,7 @@ class DataBaseConnection {
   Future<int> update_likes(dynamic data) async {
     try {
       final res = await http.post(
-        Uri.parse("http://192.168.157.76:5000/put_like"),
+        Uri.parse("http://10.149.248.153:5000/put_like"),
         headers: {"Content-type": "application/json"},
         body: jsonEncode(data),
       );
@@ -178,7 +181,7 @@ class DataBaseConnection {
   Future<int> getLikes(String id) async {
     try {
       final res = await http.post(
-        Uri.parse("http://192.168.157.76:5000/get_like"),
+        Uri.parse("http://10.149.248.153:5000/get_like"),
         headers: {"Content-type": "application/json"},
         body: jsonEncode({'_id': id}),
       );
@@ -199,7 +202,7 @@ class DataBaseConnection {
   Future<int> getUserLikeState(String postId, String rollno) async {
     try {
       final res = await http.post(
-        Uri.parse("http://192.168.157.76:5000/get_likestate"),
+        Uri.parse("http://10.149.248.153:5000/get_likestate"),
         headers: {"Content-Type": "application/json"},
         body: jsonEncode({'_id': postId, 'rollno': rollno}),
       );
@@ -221,12 +224,12 @@ class DataBaseConnection {
 
       // Just check if the image exists by pinging the endpoint
       final response = await http.get(
-        Uri.parse('http://192.168.157.76:5000/get-profile/$userId'),
+        Uri.parse('http://10.149.248.153:5000/get-profile/$userId'),
       );
 
       if (response.statusCode == 200) {
         // Return the image URL directly
-        return 'http://192.168.157.76:5000/get-profile/$userId';
+        return 'http://10.149.248.153:5000/get-profile/$userId';
       }
     } catch (e) {
       print("Error fetching profile image: $e");
@@ -236,7 +239,7 @@ class DataBaseConnection {
 
   Future<List<MentorRequest>> fetchRequests(String rollno) async {
     final response = await http.get(
-      Uri.parse('http://192.168.157.76:5000/get_requests/${rollno}'),
+      Uri.parse('http://10.149.248.153:5000/get_requests/${rollno}'),
     );
     final List jsonData = jsonDecode(response.body);
     return jsonData.map((e) => MentorRequest.fromJson(e)).toList();
@@ -245,7 +248,7 @@ class DataBaseConnection {
   Future<int> Connect_with_frd(String rollno, String temprollno) async {
     try {
       final response = await http.post(
-        Uri.parse('http://192.168.157.76:5000/add_connection'),
+        Uri.parse('http://10.149.248.153:5000/add_connection'),
         headers: {"Content-Type": "application/json"},
         body: jsonEncode({"rollno": rollno, "temprollno": temprollno}),
       );
@@ -265,14 +268,14 @@ class DataBaseConnection {
   Future<int> check_Conn(String rollno, String temprollno) async {
     final response = await http.get(
       Uri.parse(
-        "http://192.168.157.76:5000/check_connection/$rollno/$temprollno",
+        "http://10.149.248.153:5000/check_connection/$rollno/$temprollno",
       ),
       headers: {"Content-Type": "application/json"},
     );
 
     if (response.statusCode == 200) {
       final data = json.decode(response.body);
-      print("connection val "+data["connected"]);
+      print("connection val " + data["connected"]);
       return data["connected"];
     } else {
       return 0;

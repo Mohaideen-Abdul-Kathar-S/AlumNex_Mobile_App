@@ -88,7 +88,7 @@ void _uploadPost() async {
 
   var request = http.MultipartRequest(
     'POST',
-    Uri.parse('http://192.168.157.76:5000/upload_post'), // Adjust your server IP
+    Uri.parse('http://10.149.248.153:5000/upload_post'), // Adjust your server IP
   );
 
   request.fields['user_id'] = widget.rollno;

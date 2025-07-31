@@ -49,7 +49,7 @@ class _AlumnexChatsPageState extends State<AlumnexChatsPage> {
 
   try {
     final res = await http.get(
-      Uri.parse('http://192.168.157.76:5000/search_users?q=$query'),
+      Uri.parse('http://10.149.248.153:5000/search_users?q=$query'),
     );
 
     if (res.statusCode == 200) {

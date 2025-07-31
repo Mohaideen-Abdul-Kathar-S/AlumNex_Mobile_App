@@ -23,7 +23,7 @@ class _AlumnexResumePageState extends State<AlumnexResumePage> {
   }
 
   Future<void> _fetchResume() async {
-    final url = Uri.parse('http://192.168.157.76:5000/get-resume/${widget.rollno}');
+    final url = Uri.parse('http://10.149.248.153:5000/get-resume/${widget.rollno}');
     final response = await http.get(url);
 
     if (response.statusCode == 200) {
@@ -61,7 +61,7 @@ class _AlumnexResumePageState extends State<AlumnexResumePage> {
                   fit: BoxFit.cover,
                 )
               : Image.network(
-                  'http://192.168.157.76:5000/get-resume/${widget.rollno}',
+                  'http://10.149.248.153:5000/get-resume/${widget.rollno}',
                   width: double.infinity,
                   height: 300,
                   fit: BoxFit.cover,

@@ -29,7 +29,7 @@ class _AlumnexIndividualChatScreenState
 
   List<Map<String, dynamic>> _messages = [];
 
-final String apiUrl = 'http://192.168.157.76:5000';
+final String apiUrl = 'http://10.149.248.153:5000';
 
 @override
 void initState() {

@@ -30,7 +30,7 @@ class _AlumnexTabCommunityPageState extends State<AlumnexTabCommunityPage> {
     print('Fetching groups for: ${widget.rollno}');
 
     final response = await http.get(
-      Uri.parse('http://192.168.157.76:5000/get_groups/${widget.rollno}'),
+      Uri.parse('http://10.149.248.153:5000/get_groups/${widget.rollno}'),
       headers: {"Content-Type": "application/json"},
     );
 

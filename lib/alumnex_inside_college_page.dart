@@ -27,7 +27,7 @@ class _AlumnexInsideCollegePageState extends State<AlumnexInsideCollegePage> {
 
   Future<List<dynamic>> fetchPosts() async {
     final response = await http.get(
-      Uri.parse('http://192.168.157.76:5000/get_posts'),
+      Uri.parse('http://10.149.248.153:5000/get_posts'),
     );
 
     if (response.statusCode == 200) {
@@ -148,7 +148,7 @@ class _AlumnexInsideCollegePageState extends State<AlumnexInsideCollegePage> {
                             child:
                                 post['postImageId'] != null
                                     ? Image.network(
-                                      'http://192.168.157.76:5000/get-post-image/${post['postImageId']}',
+                                      'http://10.149.248.153:5000/get-post-image/${post['postImageId']}',
                                       height: 300,
                                       width: double.infinity,
                                       fit: BoxFit.cover,

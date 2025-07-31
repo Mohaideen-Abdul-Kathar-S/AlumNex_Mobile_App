@@ -22,14 +22,17 @@ class _AlumnexPostPageState extends State<AlumnexPostPage> {
   final Color accentColor = const Color(0xFFe27c43);
   final Color secondaryColor = const Color(0xFF224146);
 
+  
+
   String pageName = 'Posts';
   late Future<List<dynamic>> _postsFuture;
   late String rollno;
   //TextEditingController _searchController = TextEditingController();
   List<dynamic> _searchResults = [];
   Timer? _debounce;
-  
+  List<ChatMessage> messages = [];
   TextEditingController _controller = TextEditingController();
+  ScrollController _scrollController = ScrollController(); 
 
 
 
@@ -42,25 +45,56 @@ class _AlumnexPostPageState extends State<AlumnexPostPage> {
   }
 
   Future<void> sendMessage(String message) async {
-    print("In calling sec "+message);
-    final url = Uri.parse(
-      'http://127.0.0.1:5000/chat',
-    ); // Use 10.0.2.2 for Android Emulator
+  print("In calling sec $message");
 
-    final response = await http.post(
-      url,
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({'message': message}),
-    );
+  final url = Uri.parse('http://10.149.248.153:5000/aura_assistant');
 
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
-      print('AI Response: ${data['response']}');
-      // You can also update a chat list state here.
-    } else {
-      print('Error: ${response.body}');
-    }
+  final response = await http.post(
+    url,
+    headers: {'Content-Type': 'application/json'},
+    body: jsonEncode({
+      "query": message,
+      // "context": {
+      //   "name": "Mohaideen",
+      //   "branch": "CSD",
+      //   "year": "3rd Year",
+      //   "interests": ["Cloud Computing", "AI"]
+      // }
+    }),
+  );
+
+  if (response.statusCode == 200) {
+    final data = jsonDecode(response.body);
+    final aiReply = data['response'] ?? 'No response from AI.';
+
+    setState(() {
+      messages.add(ChatMessage(text: aiReply, isUser: false));
+    });
+
+    
+// Scroll to bottom after short delay to ensure UI has updated
+Future.delayed(Duration(milliseconds: 100), () {
+  _scrollController.animateTo(
+    _scrollController.position.maxScrollExtent,
+    duration: Duration(milliseconds: 300),
+    curve: Curves.easeOut,
+  );
+});
+
+
+
+
+    print('AI Response: $aiReply');
+  } else {
+    setState(() {
+      messages.add(ChatMessage(
+          text: 'Error: ${response.statusCode}\n${response.body}',
+          isUser: false));
+    });
+    print('Error: ${response.body}');
   }
+}
+
 
   Future<void> searchUsers(String query) async {
     if (query.isEmpty) {
@@ -69,7 +103,7 @@ class _AlumnexPostPageState extends State<AlumnexPostPage> {
     }
 
     final res = await http.get(
-      Uri.parse('http://192.168.157.76:5000/search_users?q=$query'),
+      Uri.parse('http://10.149.248.153:5000/search_users?q=$query'),
     );
 
     if (res.statusCode == 200) {
@@ -83,7 +117,7 @@ class _AlumnexPostPageState extends State<AlumnexPostPage> {
 
   Future<Map<String, dynamic>> fetchPollResults(String pollId) async {
     final response = await http.get(
-      Uri.parse('http://192.168.157.76:5000/poll_results/$pollId'),
+      Uri.parse('http://10.149.248.153:5000/poll_results/$pollId'),
     );
 
     if (response.statusCode == 200) {
@@ -97,7 +131,7 @@ class _AlumnexPostPageState extends State<AlumnexPostPage> {
 
   Future<List<dynamic>> fetchPosts() async {
     final response = await http.get(
-      Uri.parse('http://192.168.157.76:5000/get_posts'),
+      Uri.parse('http://10.149.248.153:5000/get_posts'),
     );
 
     if (response.statusCode == 200) {
@@ -112,7 +146,7 @@ class _AlumnexPostPageState extends State<AlumnexPostPage> {
     String rollno,
     String comment,
   ) async {
-    final url = Uri.parse('http://192.168.157.76:5000/submit_comment');
+    final url = Uri.parse('http://10.149.248.153:5000/submit_comment');
     final response = await http.post(
       url,
       headers: {"Content-Type": "application/json"},
@@ -130,9 +164,11 @@ class _AlumnexPostPageState extends State<AlumnexPostPage> {
     }
   }
 
+  
+
   Widget _buildChatBotScreen() {
     return Container(
-      height: 300, // Set the height for the mini screen
+      height: 700, // Set the height for the mini screen
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
@@ -154,37 +190,69 @@ class _AlumnexPostPageState extends State<AlumnexPostPage> {
           Divider(),
           // Chat messages or UI goes here
           Expanded(
-            child: ListView(
-              children: [
-                ListTile(title: Text('Chatbot: How can I help you today?')),
-                // Other chat messages can go here
-              ],
+  child: ListView.builder(
+    controller: _scrollController, // ✅ Add controller here
+    itemCount: messages.length,
+    itemBuilder: (context, index) {
+      final message = messages[index];
+      return ListTile(
+        title: Align(
+          alignment:
+              message.isUser ? Alignment.centerRight : Alignment.centerLeft,
+          child: Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: message.isUser ? Colors.blue[100] : Colors.grey[300],
+              borderRadius: BorderRadius.circular(10),
             ),
+            child: Text(message.text),
           ),
+        ),
+      );
+    },
+  ),
+),
+
           // Text field for user to type message
           Padding(
             padding: const EdgeInsets.all(8.0),
             child: Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _controller,
-                    decoration: InputDecoration(
-                      hintText: 'Type your message...',
-                      border: OutlineInputBorder(),
-                    ),
-                    onSubmitted: (message) {
-                      print(message);
-                      if (message.isNotEmpty) {
-                        sendMessage(message);
-                        _controller.clear();
-                      }
-                    },
-                  ),
-                ),
-                IconButton(icon: Icon(Icons.send), onPressed: () {}),
-              ],
-            ),
+  children: [
+    Expanded(
+      child: TextField(
+        controller: _controller,
+        decoration: InputDecoration(hintText: 'Type your message...'),
+      ),
+    ),
+    IconButton(
+      icon: Icon(Icons.send),
+      onPressed: () async {
+  final text = _controller.text.trim();
+  if (text.isNotEmpty) {
+    setState(() {
+      messages.add(ChatMessage(text: text, isUser: true));
+    });
+
+    _controller.clear();
+
+    // Scroll to bottom after user message
+    Future.delayed(Duration(milliseconds: 100), () {
+      _scrollController.animateTo(
+        _scrollController.position.maxScrollExtent,
+        duration: Duration(milliseconds: 300),
+        curve: Curves.easeOut,
+      );
+    });
+
+    // Await sending message (important!)
+    await sendMessage(text);
+  }
+},
+
+    ),
+  ],
+),
+
           ),
         ],
       ),
@@ -192,7 +260,7 @@ class _AlumnexPostPageState extends State<AlumnexPostPage> {
   }
 
   Future<Map<String, dynamic>> fetchComments(String postId) async {
-    final url = Uri.parse('http://192.168.157.76:5000/get_comments/$postId');
+    final url = Uri.parse('http://10.149.248.153:5000/get_comments/$postId');
     final response = await http.get(url);
     if (response.statusCode == 200) {
       return jsonDecode(response.body);
@@ -242,7 +310,7 @@ class _AlumnexPostPageState extends State<AlumnexPostPage> {
                         onPressed: () async {
                           await http.post(
                             Uri.parse(
-                              'http://192.168.157.76:5000/submit_poll/${widget.rollno}',
+                              'http://10.149.248.153:5000/submit_poll/${widget.rollno}',
                             ),
                             headers: {"Content-Type": "application/json"},
                             body: jsonEncode({
@@ -287,7 +355,7 @@ class _AlumnexPostPageState extends State<AlumnexPostPage> {
   Widget buildPost(dynamic post) {
     return post['postImageId'] != null
         ? Image.network(
-          'http://192.168.157.76:5000/get-post-image/${post['postImageId']}',
+          'http://10.149.248.153:5000/get-post-image/${post['postImageId']}',
           height: 300,
           width: double.infinity,
           fit: BoxFit.cover,
@@ -381,7 +449,7 @@ class _AlumnexPostPageState extends State<AlumnexPostPage> {
                         return ListTile(
                           leading: CircleAvatar(
                             backgroundImage: NetworkImage(
-                              "http://192.168.157.76:5000/get-profile/${user['_id']}",
+                              "http://10.149.248.153:5000/get-profile/${user['_id']}",
                             ),
                             backgroundColor: Colors.grey[300],
                           ),
@@ -758,4 +826,11 @@ class _AlumnexPostPageState extends State<AlumnexPostPage> {
       ),
     );
   }
+}
+
+class ChatMessage {
+  final String text;
+  final bool isUser;
+
+  ChatMessage({required this.text, required this.isUser});
 }

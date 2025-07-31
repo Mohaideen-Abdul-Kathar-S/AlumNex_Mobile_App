@@ -35,7 +35,7 @@ class _AlumnexTabMeetPageState extends State<AlumnexTabMeetPage> {
 
   Future<void> fetchMeetings() async {
     final response = await http.get(
-      Uri.parse('http://192.168.157.76:5000/meetings/${widget.rollno}'),
+      Uri.parse('http:/10.149.248.153:5000/meetings/${widget.rollno}'),
     );
 
     if (response.statusCode == 200) {
@@ -56,7 +56,7 @@ class _AlumnexTabMeetPageState extends State<AlumnexTabMeetPage> {
   Future<void> fetchAssignedMeetings() async {
     final response = await http.get(
       Uri.parse(
-        'http://192.168.157.76:5000/assigned_meetings/${widget.rollno}',
+        'http://10.149.248.153:5000/assigned_meetings/${widget.rollno}',
       ),
     );
 

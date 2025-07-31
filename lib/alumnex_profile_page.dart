@@ -17,7 +17,7 @@ import 'package:image_picker/image_picker.dart'; // 📸 ADD this
 class AlumnexProfilePage extends StatefulWidget {
   final String rollno;
 
-  final dynamic roll;
+  final String roll;
   const AlumnexProfilePage({
     super.key,
     required this.rollno,
@@ -294,7 +294,7 @@ Future<void> _pickResume() async {
                               fit: BoxFit.cover,
                             )
                             : Image.network(
-                              'http://192.168.157.76:5000/get-profile/${person["_id"]}', // Replace IP
+                              'http://10.149.248.153:5000/get-profile/${person["_id"]}', // Replace IP
                               width: 160,
                               height: 160,
                               fit: BoxFit.cover,
@@ -402,7 +402,7 @@ Future<void> _pickResume() async {
                           return ListTile(
                             leading: CircleAvatar(radius: 30,
                             backgroundImage: NetworkImage(
-                              "http://192.168.157.76:5000/get-profile/${student["_id"]}",
+                              "http://10.149.248.153:5000/get-profile/${student["_id"]}",
                             ),
                             backgroundColor: Colors.white,
                             ),

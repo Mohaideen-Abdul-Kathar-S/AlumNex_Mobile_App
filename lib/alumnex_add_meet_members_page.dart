@@ -36,7 +36,7 @@ class _AlumnexAddMeetMembersPageState extends State<AlumnexAddMeetMembersPage> {
 
   Future<void> fetchMeetingDetails() async {
     final response = await http.get(
-      Uri.parse('http://192.168.157.76:5000/meeting_detail/${widget.meetId}'),
+      Uri.parse('http://10.149.248.153:5000/meeting_detail/${widget.meetId}'),
     );
 
     if (response.statusCode == 200) {
@@ -50,7 +50,7 @@ class _AlumnexAddMeetMembersPageState extends State<AlumnexAddMeetMembersPage> {
 
   Future<void> searchStudent(String query) async {
     final response = await http.get(
-      Uri.parse('http://192.168.157.76:5000/students/search?query=$query'),
+      Uri.parse('http://10.149.248.153:5000/students/search?query=$query'),
     );
     if (response.statusCode == 200) {
       setState(() {
@@ -64,7 +64,7 @@ class _AlumnexAddMeetMembersPageState extends State<AlumnexAddMeetMembersPage> {
   Future<void> addMember(String studentRoll) async {
     final response = await http.post(
       Uri.parse(
-        'http://192.168.157.76:5000/meeting/${widget.meetId}/add_member',
+        'http://10.149.248.153:5000/meeting/${widget.meetId}/add_member',
       ),
       headers: {'Content-Type': 'application/json'},
       body: json.encode({'rollno': studentRoll}),
@@ -83,7 +83,7 @@ class _AlumnexAddMeetMembersPageState extends State<AlumnexAddMeetMembersPage> {
   Future<void> addGroupMembers(String groupType) async {
     final response = await http.post(
       Uri.parse(
-        'http://192.168.157.76:5000/meeting/${widget.meetId}/add_group',
+        'http://10.149.248.153:5000/meeting/${widget.meetId}/add_group',
       ),
       headers: {'Content-Type': 'application/json'},
       body: json.encode({'group': groupType}),
@@ -106,7 +106,7 @@ class _AlumnexAddMeetMembersPageState extends State<AlumnexAddMeetMembersPage> {
     }
 
     final res = await http.get(
-      Uri.parse('http://192.168.157.76:5000/search_users?q=$query'),
+      Uri.parse('http://10.149.248.153:5000/search_users?q=$query'),
     );
 
     if (res.statusCode == 200) {
@@ -120,7 +120,7 @@ class _AlumnexAddMeetMembersPageState extends State<AlumnexAddMeetMembersPage> {
 
   Future<void> _addMemberToMeeting(String studentId) async {
     final response = await http.post(
-      Uri.parse('http://192.168.157.76:5000/add_member_meet'),
+      Uri.parse('http://10.149.248.153:5000/add_member_meet'),
       headers: {"Content-Type": "application/json"},
       body: jsonEncode({"meet_id": widget.meetId, "student_id": studentId}),
     );

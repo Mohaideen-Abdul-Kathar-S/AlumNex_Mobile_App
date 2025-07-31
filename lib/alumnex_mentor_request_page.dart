@@ -18,7 +18,7 @@ class AlumnexMentorRequestPage extends StatefulWidget {
 class _AlumnexMentorRequestPageState extends State<AlumnexMentorRequestPage> {
   Future<void> respondToRequest(String id, String response) async {
     final res = await http.post(
-      Uri.parse('http://192.168.157.76:5000/respond_request'),
+      Uri.parse('http://10.149.248.153:5000/respond_request'),
       headers: {"Content-Type": "application/json"},
       body: jsonEncode({"id": id, "response": response}),
     );

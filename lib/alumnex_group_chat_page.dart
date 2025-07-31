@@ -59,7 +59,7 @@ void _loadMessages() async {
   final text = _messageController.text.trim();
   if (text.isNotEmpty) {
     await http.post(
-      Uri.parse('http://192.168.157.76:5000/send_group_message'),
+      Uri.parse('http://10.149.248.153:5000/send_group_message'),
       headers: {"Content-Type": "application/json"},
       body: jsonEncode({
         "group_id": widget.groupid,
@@ -77,7 +77,7 @@ void _loadMessages() async {
 
 Future<List<Map<String, dynamic>>> _fetchMessages() async {
   final response = await http.get(
-    Uri.parse('http://192.168.157.76:5000/get_group_messages/${widget.groupid}'),
+    Uri.parse('http://10.149.248.153:5000/get_group_messages/${widget.groupid}'),
   );
 
   if (response.statusCode == 200) {

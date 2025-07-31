@@ -58,7 +58,7 @@ class _AlumnexGlobalChatPageState extends State<AlumnexGlobalChatPage> {
     };
 
     final response = await http.post(
-      Uri.parse('http://192.168.157.76:5000/create_post/${widget.rollno}'), // Flask API endpoint
+      Uri.parse('http://10.149.248.153:5000/create_post/${widget.rollno}'), // Flask API endpoint
       headers: {'Content-Type': 'application/json'},
       body: json.encode(postData),
     );

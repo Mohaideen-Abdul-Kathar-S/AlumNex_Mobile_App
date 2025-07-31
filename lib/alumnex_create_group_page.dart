@@ -30,7 +30,7 @@ TextEditingController searchController = TextEditingController();
     }
 
     final res = await http.get(
-      Uri.parse('http://192.168.157.76:5000/search_users?q=$query'),
+      Uri.parse('http://10.149.248.153:5000/search_users?q=$query'),
     );
 
     if (res.statusCode == 200) {
@@ -65,7 +65,7 @@ void _submitGroup() async {
 
   try {
     final response = await http.post(
-      Uri.parse('http://192.168.157.76:5000/create_group'),
+      Uri.parse('http://10.149.248.153:5000/create_group'),
       headers: {"Content-Type": "application/json"},
       body: jsonEncode(payload),
     );
