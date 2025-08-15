@@ -54,12 +54,13 @@ class _AlumnexPostPageState extends State<AlumnexPostPage> {
     headers: {'Content-Type': 'application/json'},
     body: jsonEncode({
       "query": message,
-      // "context": {
-      //   "name": "Mohaideen",
-      //   "branch": "CSD",
-      //   "year": "3rd Year",
-      //   "interests": ["Cloud Computing", "AI"]
-      // }
+      "context": {
+        "id":rollno,
+        // "name": "Mohaideen",
+        // "branch": "CSD",
+        // "year": "3rd Year",
+        // "interests": ["Cloud Computing", "AI"]
+      }
     }),
   );
 
@@ -591,7 +592,21 @@ Future.delayed(Duration(milliseconds: 100), () {
                                   ),
                                 ),
                                 IconButton(
-                                  onPressed: () {},
+                                  onPressed: () {
+                                    
+                            Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder:
+                                    (context) => AlumnexViewProfilePage(
+                                      temprollno: post['rollno'],
+                                      temproll: post['roll'],
+                                      rollno: rollno,
+                                      roll: widget.roll,
+                                    ),
+                              ),
+                            );
+                        
+                                  },
                                   icon: Icon(Icons.keyboard_double_arrow_right),
                                 ),
                               ],
@@ -642,7 +657,7 @@ Future.delayed(Duration(milliseconds: 100), () {
                                         );
                                       },
                                     ),
-                                    FutureBuilder<int>(
+                                    FutureBuilder<List<int>>(
                                       future: DataBaseConnection().getLikes(
                                         post['_id'].toString(),
                                       ),
@@ -653,7 +668,7 @@ Future.delayed(Duration(milliseconds: 100), () {
                                         } else if (snapshot.hasError) {
                                           return Text("Error");
                                         } else {
-                                          return Text('${snapshot.data} Likes');
+                                          return Text('${snapshot.data?[0]} Likes');
                                         }
                                       },
                                     ),
@@ -783,7 +798,21 @@ Future.delayed(Duration(milliseconds: 100), () {
 
                                       icon: Icon(Icons.comment),
                                     ),
-                                    Text('Comment'),
+                                    FutureBuilder<List<int>>(
+                                      future: DataBaseConnection().getLikes(
+                                        post['_id'].toString(),
+                                      ),
+                                      builder: (context, snapshot) {
+                                        if (snapshot.connectionState ==
+                                            ConnectionState.waiting) {
+                                          return Text("...");
+                                        } else if (snapshot.hasError) {
+                                          return Text("Error");
+                                        } else {
+                                          return Text('${snapshot.data?[1]} Commands');
+                                        }
+                                      },
+                                    ),
                                   ],
                                 ),
                                 Column(

@@ -33,6 +33,7 @@ class DataBaseConnection {
       if (res.statusCode == 200) {
         return 200;
       }
+      print("error in login");
     } catch (e) {
       print(e);
     }
@@ -178,26 +179,28 @@ class DataBaseConnection {
     return 0;
   }
 
-  Future<int> getLikes(String id) async {
-    try {
-      final res = await http.post(
-        Uri.parse("http://10.149.248.153:5000/get_like"),
-        headers: {"Content-type": "application/json"},
-        body: jsonEncode({'_id': id}),
-      );
+ Future<List<int>> getLikes(String id) async {
+  try {
+    final res = await http.post(
+      Uri.parse("http://10.149.248.153:5000/get_like"),
+      headers: {"Content-type": "application/json"},
+      body: jsonEncode({'_id': id}),
+    );
 
-      if (res.statusCode == 200) {
-        final decoded = jsonDecode(res.body);
-        return decoded['like_count'] ?? 0;
-      } else {
-        print("Failed to get likes: ${res.statusCode}");
-        return 0;
-      }
-    } catch (e) {
-      print("Error: $e");
-      return 0;
+    if (res.statusCode == 200) {
+      final decoded = jsonDecode(res.body);
+      int likeCount = decoded['like_count'] ?? 0;
+      int commentsCount = decoded['comments_count'] ?? 0;
+      return [likeCount, commentsCount]; // List with 2 integers
+    } else {
+      print("Failed to get likes: ${res.statusCode}");
+      return [0, 0];
     }
+  } catch (e) {
+    print("Error: $e");
+    return [0, 0];
   }
+}
 
   Future<int> getUserLikeState(String postId, String rollno) async {
     try {
@@ -279,6 +282,23 @@ class DataBaseConnection {
       return data["connected"];
     } else {
       return 0;
+    }
+  }
+
+  Future<dynamic> getLeaderboard() async {
+    try {
+      final response = await http.get(
+        Uri.parse('http://10.149.248.153:5000/get_detsils_leaderboard'),
+      );
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body);
+      } else {
+        print("Failed to fetch leaderboard: ${response.statusCode}");
+        return null;
+      }
+    } catch (e) {
+      print("Error fetching leaderboard: $e");
+      return null;
     }
   }
 }

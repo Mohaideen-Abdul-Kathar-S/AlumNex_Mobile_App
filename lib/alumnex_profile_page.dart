@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:file_picker/file_picker.dart';
 import 'dart:io';
 import 'package:alumnex/alumn_global.dart';
 import 'package:alumnex/alumnex_database_connection_page.dart';
@@ -79,7 +80,25 @@ Future<void> _pickResume() async {
   }
 }
 
+// Future<void> _pickResume() async {
+//   // Allow multiple file types
+//   FilePickerResult? result = await FilePicker.platform.pickFiles(
+//     type: FileType.custom,
+//     allowedExtensions: ['pdf', 'docx', 'doc', 'jpg', 'jpeg', 'png'],
+//   );
 
+//   if (result != null && result.files.single.path != null) {
+//     File file = File(result.files.single.path!);
+
+//     _profileResume = file;
+//     String response = await DataBaseConnection()
+//         .uploadResume(_profileResume!, person["_id"]);
+
+//     print(response);
+//   } else {
+//     print("No file selected");
+//   }
+// }
 
   void _editProfileField(String key) {
     TextEditingController titleController = TextEditingController(
@@ -236,7 +255,7 @@ Future<void> _pickResume() async {
           ),
           IconButton(onPressed: () {
             Navigator.of(context).push(
-                MaterialPageRoute(builder: (context) => AlumnexLeaderboardPage()),
+                MaterialPageRoute(builder: (context) => AlumnexLeaderboardPage(rollno: widget.rollno,roll: widget.roll,)),
               );
           }, icon: Icon(Icons.golf_course_sharp)),
           IconButton(
@@ -458,7 +477,7 @@ Future<void> _pickResume() async {
                     MaterialPageRoute(
                       builder:
                           (context) =>
-                              AlumnexPostUploadPage(rollno: person["_id"]),
+                              AlumnexPostUploadPage(rollno: person["_id"],roll: widget.roll,),
                     ),
                   );
                 },

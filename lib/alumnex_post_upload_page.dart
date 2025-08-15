@@ -7,8 +7,10 @@ import 'package:image_picker/image_picker.dart';
 
 class AlumnexPostUploadPage extends StatefulWidget {
   final String rollno;
+  
+  final String roll;
 
-  const AlumnexPostUploadPage({super.key, required this.rollno});
+  const AlumnexPostUploadPage({super.key, required this.rollno,required this.roll});
 
   @override
   _AlumnexPostUploadPageState createState() => _AlumnexPostUploadPageState();
@@ -67,6 +69,8 @@ void _uploadPost() async {
   String postId =
       "${widget.rollno}_post_${DateTime.now().millisecondsSinceEpoch}";
   Map<String, dynamic> postData = {
+    'rollno':widget.rollno,
+    'roll':widget.roll,
     "postId": postId,
     "postType": selectedPostType,
     "title": _titleController.text,

@@ -211,28 +211,42 @@ class _AlumnexInsideCollegePageState extends State<AlumnexInsideCollegePage> {
                                       );
                                     },
                                   ),
-                                  FutureBuilder<int>(
-                                    future: DataBaseConnection().getLikes(
-                                      post['_id'].toString(),
+                                  FutureBuilder<List<int>>(
+                                      future: DataBaseConnection().getLikes(
+                                        post['_id'].toString(),
+                                      ),
+                                      builder: (context, snapshot) {
+                                        if (snapshot.connectionState ==
+                                            ConnectionState.waiting) {
+                                          return Text("...");
+                                        } else if (snapshot.hasError) {
+                                          return Text("Error");
+                                        } else {
+                                          return Text('${snapshot.data?[0]} Likes');
+                                        }
+                                      },
                                     ),
-                                    builder: (context, snapshot) {
-                                      if (snapshot.connectionState ==
-                                          ConnectionState.waiting) {
-                                        return Text("...");
-                                      } else if (snapshot.hasError) {
-                                        return Text("Error");
-                                      } else {
-                                        return Text('${snapshot.data} Likes');
-                                      }
-                                    },
-                                  ),
                                 ],
                               ),
 
                               Column(
                                 children: [
                                   Icon(Icons.comment),
-                                  Text('Comment'),
+                                  FutureBuilder<List<int>>(
+                                      future: DataBaseConnection().getLikes(
+                                        post['_id'].toString(),
+                                      ),
+                                      builder: (context, snapshot) {
+                                        if (snapshot.connectionState ==
+                                            ConnectionState.waiting) {
+                                          return Text("...");
+                                        } else if (snapshot.hasError) {
+                                          return Text("Error");
+                                        } else {
+                                          return Text('${snapshot.data?[1]} Commands');
+                                        }
+                                      },
+                                    ),
                                 ],
                               ),
                               Column(
