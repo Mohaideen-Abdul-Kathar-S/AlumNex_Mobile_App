@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:alumnex/alumn_global.dart';
 import 'package:alumnex/alumnex_create_community_page.dart';
 import 'package:alumnex/alumnex_create_group_page.dart';
 
@@ -15,7 +16,7 @@ Future<Map<String, List<Map<String, dynamic>>>> fetchGroups() async {
   print('Fetching groups for: $rollno');
 
   final response = await http.get(
-    Uri.parse('http://10.149.248.153:5000/get_groups/$rollno'),
+    Uri.parse('$urI/get_groups/$rollno'),
     headers: {"Content-Type": "application/json"},
   );
 

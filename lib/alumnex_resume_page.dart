@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:alumnex/alumn_global.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
@@ -24,7 +25,7 @@ class _AlumnexResumePageState extends State<AlumnexResumePage> {
   }
 
   Future<void> _fetchResume() async {
-    final url = Uri.parse('http://10.149.248.153:5000/get-resume/${widget.rollno}');
+    final url = Uri.parse('$urI/get-resume/${widget.rollno}');
     final response = await http.get(url);
 
     if (response.statusCode == 200) {

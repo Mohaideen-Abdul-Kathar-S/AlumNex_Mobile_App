@@ -47,7 +47,7 @@ class _AlumnexViewProfilePageState extends State<AlumnexViewProfilePage> {
   Future<int> fetchconn() async {
     final response = await http.get(
       Uri.parse(
-        "http://10.149.248.153:5000/check_connection/${widget.rollno}/${widget.temprollno}",
+        "$urI/check_connection/${widget.rollno}/${widget.temprollno}",
       ),
       headers: {"Content-Type": "application/json"},
     );
@@ -197,7 +197,7 @@ class _AlumnexViewProfilePageState extends State<AlumnexViewProfilePage> {
                               fit: BoxFit.cover,
                             )
                             : Image.network(
-                              'http://10.149.248.153:5000/get-profile/${person["_id"]}', // Replace IP
+                              '$urI/get-profile/${person["_id"]}', // Replace IP
                               width: 160,
                               height: 160,
                               fit: BoxFit.cover,
@@ -287,7 +287,7 @@ class _AlumnexViewProfilePageState extends State<AlumnexViewProfilePage> {
                             leading: CircleAvatar(
                               radius: 30,
                               backgroundImage: NetworkImage(
-                                "http://10.149.248.153:5000/get-profile/${student["_id"]}",
+                                "$urI/get-profile/${student["_id"]}",
                               ),
                               backgroundColor: Colors.white,
                             ),
@@ -378,7 +378,7 @@ class _AlumnexViewProfilePageState extends State<AlumnexViewProfilePage> {
                     }
 
                     final response = await http.post(
-                      Uri.parse("http://10.149.248.153:5000/sendRequest"),
+                      Uri.parse("$urI/sendRequest"),
                       headers: {"Content-Type": "application/json"},
                       body: jsonEncode({
                         "from": sender,

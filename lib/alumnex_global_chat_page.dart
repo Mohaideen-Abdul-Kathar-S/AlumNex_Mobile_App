@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:alumnex/alumn_global.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
@@ -58,7 +59,7 @@ class _AlumnexGlobalChatPageState extends State<AlumnexGlobalChatPage> {
     };
 
     final response = await http.post(
-      Uri.parse('http://10.149.248.153:5000/create_post/${widget.rollno}'), // Flask API endpoint
+      Uri.parse('$urI/create_post/${widget.rollno}'), // Flask API endpoint
       headers: {'Content-Type': 'application/json'},
       body: json.encode(postData),
     );

@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:alumnex/alumn_global.dart';
 import 'package:alumnex/alumnex_database_connection_page.dart';
 import 'package:alumnex/alumnex_individual_chat_screen.dart';
 import 'package:alumnex/alumnex_post_page.dart';
@@ -36,7 +37,7 @@ class _AlumnexSavedPostsPageState extends State<AlumnexSavedPostsPage> {
   Future<void> fetchSavedPosts(String rollno) async {
     print("getSavedPosts called with rollno: $rollno");
     final response = await http.get(
-      Uri.parse('http://10.149.248.153:5000/getSavedPosts/$rollno'),
+      Uri.parse('$urI/getSavedPosts/$rollno'),
     );
 
     if (response.statusCode == 200) {
@@ -91,7 +92,7 @@ class _AlumnexSavedPostsPageState extends State<AlumnexSavedPostsPage> {
                         onPressed: () async {
                           await http.post(
                             Uri.parse(
-                              'http://10.149.248.153:5000/submit_poll/${widget.rollno}',
+                              '$urI/submit_poll/${widget.rollno}',
                             ),
                             headers: {"Content-Type": "application/json"},
                             body: jsonEncode({
@@ -143,7 +144,7 @@ class _AlumnexSavedPostsPageState extends State<AlumnexSavedPostsPage> {
   };
 
   final response = await http.post(
-    Uri.parse('http://10.149.248.153:5000/send_message'),
+    Uri.parse('$urI/send_message'),
     headers: {'Content-Type': 'application/json'},
     body: json.encode(message),
   );
@@ -168,7 +169,7 @@ class _AlumnexSavedPostsPageState extends State<AlumnexSavedPostsPage> {
 // Fetch and open post details
 Future<void> _openSharedPost(String postId) async {
   final res = await http.get(
-    Uri.parse('http://10.149.248.153:5000/get_post/$postId'),
+    Uri.parse('$urI/get_post/$postId'),
   );
 
   if (res.statusCode == 200) {

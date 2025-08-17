@@ -374,7 +374,7 @@ class _AlumnexProfilePageState extends State<AlumnexProfilePage> {
       )
     : (person?["_id"] != null
         ? Image.network(
-            'http://10.149.248.153:5000/get-profile/${person!["_id"]}',
+            '$urI/get-profile/${person!["_id"]}',
             width: 160,
             height: 160,
             fit: BoxFit.cover,
@@ -484,7 +484,7 @@ class _AlumnexProfilePageState extends State<AlumnexProfilePage> {
                             leading: CircleAvatar(
                               radius: 30,
                               backgroundImage: NetworkImage(
-                                "http://10.149.248.153:5000/get-profile/${student["_id"]}",
+                                "$urI/get-profile/${student["_id"]}",
                               ),
                               backgroundColor: Colors.white,
                             ),
@@ -541,7 +541,7 @@ class _AlumnexProfilePageState extends State<AlumnexProfilePage> {
                   leading: CircleAvatar(
                     radius: 30,
                     backgroundImage: NetworkImage(
-                      "http://10.149.248.153:5000/get-profile/${alumni['_id']}",
+                      "$urI/get-profile/${alumni['_id']}",
                     ),
                     backgroundColor: Colors.white,
                   ),

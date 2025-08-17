@@ -1,3 +1,4 @@
+import 'package:alumnex/alumn_global.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:http/http.dart' as http;
@@ -49,7 +50,7 @@ Future<void> _submitForm() async {
 
     try {
       final response = await http.post(
-        Uri.parse('http://10.149.248.153:5000/create-meet'),
+        Uri.parse('$urI/create-meet'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode(meetData),
       );

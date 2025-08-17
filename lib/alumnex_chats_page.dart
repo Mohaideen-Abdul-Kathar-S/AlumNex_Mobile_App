@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:alumnex/alumn_global.dart';
 import 'package:alumnex/alumnex_individual_chat_screen.dart';
 import 'package:alumnex/alumnex_tab_chats_page.dart';
 import 'package:alumnex/alumnex_tab_community_page.dart';
@@ -51,7 +52,7 @@ class _AlumnexChatsPageState extends State<AlumnexChatsPage> {
 
   try {
     final res = await http.get(
-      Uri.parse('http://10.149.248.153:5000/search_users?q=$query'),
+      Uri.parse('$urI/search_users?q=$query'),
     );
 
     if (res.statusCode == 200) {
@@ -188,7 +189,7 @@ class _AlumnexChatsPageState extends State<AlumnexChatsPage> {
                   child: ListTile(
                     leading: CircleAvatar(
                       backgroundImage: NetworkImage(
-                        "http://192.168.157.76:5000/get-profile/${user['_id']}",
+                        "$urI/get-profile/${user['_id']}",
                       ),
                       backgroundColor: Colors.grey[300],
                     ),

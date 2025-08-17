@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:alumnex/alumn_global.dart';
 import 'package:alumnex/alumnex_database_connection_page.dart';
 import 'package:alumnex/alumnex_view_profile_page.dart';
 import 'package:flutter/material.dart';
@@ -20,7 +21,7 @@ class AlumnexPostPage extends StatefulWidget {
 Widget buildPost(dynamic post) {
   return post['postImageId'] != null
       ? Image.network(
-        'http://10.149.248.153:5000/get-post-image/${post['postImageId']}',
+        '$urI/get-post-image/${post['postImageId']}',
         height: 300,
         width: double.infinity,
         fit: BoxFit.cover,
@@ -55,7 +56,7 @@ class _AlumnexPostPageState extends State<AlumnexPostPage> {
 
   List<dynamic> connections = [];
   bool isLoading = true;
-  final String apiUrl = 'http://10.149.248.153:5000';
+  final String apiUrl = '$urI';
   List<String> likedPosts = [];
   @override
   void initState() {
@@ -69,7 +70,7 @@ class _AlumnexPostPageState extends State<AlumnexPostPage> {
   Future<void> fetchSavedPosts(String rollno) async {
     print("getSavedPosts called with rollno: $rollno");
     final response = await http.get(
-      Uri.parse('http://10.149.248.153:5000/getSavedPosts/$rollno'),
+      Uri.parse('$urI/getSavedPosts/$rollno'),
     );
 
     if (response.statusCode == 200) {
@@ -116,7 +117,7 @@ class _AlumnexPostPageState extends State<AlumnexPostPage> {
 
   Future<void> fetchConnections() async {
     final res = await http.get(
-      Uri.parse('http://10.149.248.153:5000/get_connections/${widget.rollno}'),
+      Uri.parse('$urI/get_connections/${widget.rollno}'),
     );
 
     if (res.statusCode == 200) {
@@ -125,7 +126,7 @@ class _AlumnexPostPageState extends State<AlumnexPostPage> {
 
       for (var id in ids) {
         final userRes = await http.get(
-          Uri.parse('http://10.149.248.153:5000/get_user/$id'),
+          Uri.parse('$urI/get_user/$id'),
         );
 
         if (userRes.statusCode == 200) {
@@ -149,7 +150,7 @@ class _AlumnexPostPageState extends State<AlumnexPostPage> {
   Future<void> sendMessage(String message) async {
     print("In calling sec $message");
 
-    final url = Uri.parse('http://10.149.248.153:5000/aura_assistant');
+    final url = Uri.parse('$urI/aura_assistant');
 
     final response = await http.post(
       url,
@@ -204,7 +205,7 @@ class _AlumnexPostPageState extends State<AlumnexPostPage> {
     }
 
     final res = await http.get(
-      Uri.parse('http://10.149.248.153:5000/search_users?q=$query'),
+      Uri.parse('$urI/search_users?q=$query'),
     );
 
     if (res.statusCode == 200) {
@@ -218,7 +219,7 @@ class _AlumnexPostPageState extends State<AlumnexPostPage> {
 
   Future<Map<String, dynamic>> fetchPollResults(String pollId) async {
     final response = await http.get(
-      Uri.parse('http://10.149.248.153:5000/poll_results/$pollId'),
+      Uri.parse('$urI/poll_results/$pollId'),
     );
 
     if (response.statusCode == 200) {
@@ -230,7 +231,7 @@ class _AlumnexPostPageState extends State<AlumnexPostPage> {
 
   Future<List<dynamic>> fetchPosts() async {
     final response = await http.get(
-      Uri.parse('http://10.149.248.153:5000/get_posts'),
+      Uri.parse('$urI/get_posts'),
     );
 
     if (response.statusCode == 200) {
@@ -245,7 +246,7 @@ class _AlumnexPostPageState extends State<AlumnexPostPage> {
     String rollno,
     String comment,
   ) async {
-    final url = Uri.parse('http://10.149.248.153:5000/submit_comment');
+    final url = Uri.parse('$urI/submit_comment');
     final response = await http.post(
       url,
       headers: {"Content-Type": "application/json"},
@@ -362,7 +363,7 @@ class _AlumnexPostPageState extends State<AlumnexPostPage> {
   }
 
   Future<Map<String, dynamic>> fetchComments(String postId) async {
-    final url = Uri.parse('http://10.149.248.153:5000/get_comments/$postId');
+    final url = Uri.parse('$urI/get_comments/$postId');
     final response = await http.get(url);
     if (response.statusCode == 200) {
       return jsonDecode(response.body);
@@ -412,7 +413,7 @@ class _AlumnexPostPageState extends State<AlumnexPostPage> {
                         onPressed: () async {
                           await http.post(
                             Uri.parse(
-                              'http://10.149.248.153:5000/submit_poll/${widget.rollno}',
+                              '$urI/submit_poll/${widget.rollno}',
                             ),
                             headers: {"Content-Type": "application/json"},
                             body: jsonEncode({
@@ -530,7 +531,7 @@ class _AlumnexPostPageState extends State<AlumnexPostPage> {
                         return ListTile(
                           leading: CircleAvatar(
                             backgroundImage: NetworkImage(
-                              "http://10.149.248.153:5000/get-profile/${user['_id']}",
+                              "$urI/get-profile/${user['_id']}",
                             ),
                             backgroundColor: Colors.grey[300],
                           ),
@@ -1026,7 +1027,7 @@ class _AlumnexPostPageState extends State<AlumnexPostPage> {
                                         );
                                         final response = await http.get(
                                           Uri.parse(
-                                            'http://10.149.248.153:5000/saveposts/$userId/$postId',
+                                            '$urI/saveposts/$userId/$postId',
                                           ),
                                         );
 

@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:alumnex/alumn_global.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -20,7 +21,7 @@ class AlumnexAddMeetMembersPage extends StatefulWidget {
 
   // ---- Upload template PDF ----
   static Future<Map<String, dynamic>> uploadTemplate(File pdfFile) async {
-    var request = http.MultipartRequest("POST", Uri.parse("$base/template"));
+    var request = http.MultipartRequest("POST", Uri.parse("$urI/template"));
     request.files.add(await http.MultipartFile.fromPath("file", pdfFile.path));
     var res = await request.send();
     if (res.statusCode == 200) {
@@ -32,7 +33,7 @@ class AlumnexAddMeetMembersPage extends StatefulWidget {
 
   // ---- Upload host signature ----
   static Future<Map<String, dynamic>> uploadSignature(String hostId, File sigFile) async {
-    var request = http.MultipartRequest("POST", Uri.parse("$base/signature"));
+    var request = http.MultipartRequest("POST", Uri.parse("$urI/signature"));
     request.fields["host_id"] = hostId;
     request.files.add(await http.MultipartFile.fromPath("file", sigFile.path));
     var res = await request.send();
@@ -46,7 +47,7 @@ class AlumnexAddMeetMembersPage extends StatefulWidget {
   // ---- Distribute certificates ----
   static Future<Map<String, dynamic>> distributeCertificates(String meetId) async {
     final res = await http.post(
-      Uri.parse('$base/distribute_certificates'),
+      Uri.parse('$urI/distribute_certificates'),
       headers: {'Content-Type': 'application/json'},
       body: json.encode({'meet_id': meetId}),
     );
@@ -112,7 +113,7 @@ Future<void> pickSignature() async {
 
   Future<void> fetchMeetingDetails() async {
     final response = await http.get(
-      Uri.parse('http://10.149.248.153:5000/meeting_detail/${widget.meetId}'),
+      Uri.parse('$urI/meeting_detail/${widget.meetId}'),
     );
 
     if (response.statusCode == 200) {
@@ -126,7 +127,7 @@ Future<void> pickSignature() async {
 
   Future<void> searchStudent(String query) async {
     final response = await http.get(
-      Uri.parse('http://10.149.248.153:5000/students/search?query=$query'),
+      Uri.parse('$urI/students/search?query=$query'),
     );
     if (response.statusCode == 200) {
       setState(() {
@@ -140,7 +141,7 @@ Future<void> pickSignature() async {
   Future<void> addMember(String studentRoll) async {
     final response = await http.post(
       Uri.parse(
-        'http://10.149.248.153:5000/meeting/${widget.meetId}/add_member',
+        '$urI/meeting/${widget.meetId}/add_member',
       ),
       headers: {'Content-Type': 'application/json'},
       body: json.encode({'rollno': studentRoll}),
@@ -161,7 +162,7 @@ Future<void> pickSignature() async {
   Future<void> addGroupMembers(String groupType) async {
     final response = await http.post(
       Uri.parse(
-        'http://10.149.248.153:5000/meeting/${widget.meetId}/add_group',
+        '$urI/meeting/${widget.meetId}/add_group',
       ),
       headers: {'Content-Type': 'application/json'},
       body: json.encode({'group': groupType}),
@@ -184,7 +185,7 @@ Future<void> pickSignature() async {
     }
 
     final res = await http.get(
-      Uri.parse('http://10.149.248.153:5000/search_users?q=$query'),
+      Uri.parse('$urI/search_users?q=$query'),
     );
 
     if (res.statusCode == 200) {
@@ -198,7 +199,7 @@ Future<void> pickSignature() async {
 
   Future<void> _addMemberToMeeting(String studentId) async {
     final response = await http.post(
-      Uri.parse('http://10.149.248.153:5000/add_member_meet'),
+      Uri.parse('$urI/add_member_meet'),
       headers: {"Content-Type": "application/json"},
       body: jsonEncode({"meet_id": widget.meetId, "student_id": studentId}),
     );

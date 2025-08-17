@@ -1,3 +1,4 @@
+import 'package:alumnex/alumn_global.dart';
 import 'package:alumnex/alumnex_database_connection_page.dart';
 import 'package:alumnex/alumnex_post_page.dart';
 import 'package:alumnex/alumnex_view_profile_page.dart';
@@ -25,7 +26,7 @@ class AlumnexIndividualChatScreen extends StatefulWidget {
 }
 
   Future<Map<String, dynamic>> fetchComments(String postId) async {
-    final url = Uri.parse('http://10.149.248.153:5000/get_comments/$postId');
+    final url = Uri.parse('$urI/get_comments/$postId');
     final response = await http.get(url);
     if (response.statusCode == 200) {
       return jsonDecode(response.body);
@@ -38,7 +39,7 @@ class AlumnexIndividualChatScreen extends StatefulWidget {
     String rollno,
     String comment,
   ) async {
-    final url = Uri.parse('http://10.149.248.153:5000/submit_comment');
+    final url = Uri.parse('$urI/submit_comment');
     final response = await http.post(
       url,
       headers: {"Content-Type": "application/json"},
@@ -67,7 +68,7 @@ class _AlumnexIndividualChatScreenState
 
   List<Map<String, dynamic>> _messages = [];
 
-final String apiUrl = 'http://10.149.248.153:5000';
+final String apiUrl = '$urI';
 
   List<dynamic> connections = [];
   bool isLoading = true;
@@ -119,7 +120,7 @@ void initState() {
                         onPressed: () async {
                           await http.post(
                             Uri.parse(
-                              'http://10.149.248.153:5000/submit_poll/${widget.sender}',
+                              '$urI/submit_poll/${widget.sender}',
                             ),
                             headers: {"Content-Type": "application/json"},
                             body: jsonEncode({
@@ -304,7 +305,7 @@ Widget _buildMessage(Map<String, dynamic> msg) {
 // Fetch and open post details
 Future<void> openSharedPost(String postId) async {
   final res = await http.get(
-    Uri.parse('http://10.149.248.153:5000/get_post/$postId'),
+    Uri.parse('$urI/get_post/$postId'),
   );
 
   if (res.statusCode == 200) {

@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:alumnex/alumn_global.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
@@ -59,7 +60,7 @@ void _loadMessages() async {
   final text = _messageController.text.trim();
   if (text.isNotEmpty) {
     await http.post(
-      Uri.parse('http://10.149.248.153:5000/send_group_message'),
+      Uri.parse('$urI/send_group_message'),
       headers: {"Content-Type": "application/json"},
       body: jsonEncode({
         "group_id": widget.groupid,
@@ -77,7 +78,7 @@ void _loadMessages() async {
 
 Future<List<Map<String, dynamic>>> _fetchMessages() async {
   final response = await http.get(
-    Uri.parse('http://10.149.248.153:5000/get_group_messages/${widget.groupid}'),
+    Uri.parse('$urI/get_group_messages/${widget.groupid}'),
   );
 
   if (response.statusCode == 200) {

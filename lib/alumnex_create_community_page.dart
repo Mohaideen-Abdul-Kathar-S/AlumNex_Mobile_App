@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:alumnex/alumn_global.dart';
 import 'package:alumnex/alumnex_tab_community_page.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -52,7 +53,7 @@ void _createCommunity() async {
 
   try {
     final response = await http.post(
-      Uri.parse("http://10.149.248.153:5000/create_community"), // 🔥 your Flask API
+      Uri.parse("$urI/create_community"), // 🔥 your Flask API
       headers: {"Content-Type": "application/json"},
       body: json.encode(community),
     );

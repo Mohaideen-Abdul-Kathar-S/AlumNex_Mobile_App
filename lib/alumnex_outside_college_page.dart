@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:alumnex/alumn_global.dart';
 import 'package:alumnex/alumnex_database_connection_page.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -26,7 +27,7 @@ class _AlumnexOutsideCollegePageState extends State<AlumnexOutsideCollegePage> {
 
   Future<List<dynamic>> fetchPosts() async {
     final response = await http.get(
-      Uri.parse('http://10.149.248.153:5000/get_posts'),
+      Uri.parse('$urI/get_posts'),
     );
 
     if (response.statusCode == 200) {
@@ -147,7 +148,7 @@ class _AlumnexOutsideCollegePageState extends State<AlumnexOutsideCollegePage> {
                             child:
                                 post['postImageId'] != null
                                     ? Image.network(
-                                      'http://10.149.248.153:5000/get-post-image/${post['postImageId']}',
+                                      '$urI/get-post-image/${post['postImageId']}',
                                       height: 300,
                                       width: double.infinity,
                                       fit: BoxFit.cover,

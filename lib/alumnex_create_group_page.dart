@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'package:alumnex/alumn_global.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
@@ -30,7 +31,7 @@ TextEditingController searchController = TextEditingController();
     }
 
     final res = await http.get(
-      Uri.parse('http://10.149.248.153:5000/search_users?q=$query'),
+      Uri.parse('$urI/search_users?q=$query'),
     );
 
     if (res.statusCode == 200) {
@@ -65,7 +66,7 @@ void _submitGroup() async {
 
   try {
     final response = await http.post(
-      Uri.parse('http://10.149.248.153:5000/create_group'),
+      Uri.parse('$urI/create_group'),
       headers: {"Content-Type": "application/json"},
       body: jsonEncode(payload),
     );

@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:alumnex/alumn_global.dart';
 import 'package:open_file/open_file.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -45,7 +46,7 @@ class _AlumnexTabMeetPageState extends State<AlumnexTabMeetPage> {
   }
  
  Future<void> getCertificate(String meetId, String studentId) async {
-  final url = Uri.parse("http://10.149.248.153:5000/certificate_file/$meetId/$studentId");
+  final url = Uri.parse("$urI/certificate_file/$meetId/$studentId");
 
   final response = await http.get(url);
 
@@ -66,7 +67,7 @@ class _AlumnexTabMeetPageState extends State<AlumnexTabMeetPage> {
   Future<void> fetchMeetings() async {
     print("host meetings");
     final response = await http.get(
-      Uri.parse('http://10.149.248.153:5000/meetings/${widget.rollno}'),
+      Uri.parse('$urI/meetings/${widget.rollno}'),
     );
 
     if (response.statusCode == 200) {
@@ -87,7 +88,7 @@ class _AlumnexTabMeetPageState extends State<AlumnexTabMeetPage> {
   Future<void> fetchAssignedMeetings() async {
     final response = await http.get(
       Uri.parse(
-        'http://10.149.248.153:5000/assigned_meetings/${widget.rollno}',
+        '$urI/assigned_meetings/${widget.rollno}',
       ),
     );
 

@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:alumnex/alumn_global.dart';
 import 'package:alumnex/alumnex_individual_chat_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -28,7 +29,7 @@ class _AlumnexTabChatsPageState extends State<AlumnexTabChatsPage> {
 
   Future<void> fetchConnections() async {
     final res = await http.get(
-      Uri.parse('http://10.149.248.153:5000/get_connections/${widget.rollno}'),
+      Uri.parse('$urI/get_connections/${widget.rollno}'),
     );
 
     if (res.statusCode == 200) {
@@ -37,7 +38,7 @@ class _AlumnexTabChatsPageState extends State<AlumnexTabChatsPage> {
 
       for (var id in ids) {
         final userRes = await http.get(
-          Uri.parse('http://10.149.248.153:5000/get_user/$id'),
+          Uri.parse('$urI/get_user/$id'),
         );
 
         if (userRes.statusCode == 200) {
@@ -87,7 +88,7 @@ class _AlumnexTabChatsPageState extends State<AlumnexTabChatsPage> {
                       leading: CircleAvatar(
                         radius: 25,
                         backgroundImage: NetworkImage(
-                          "http://10.149.248.153:5000/get-profile/${user['_id']}",
+                          "$urI/get-profile/${user['_id']}",
                         ),
                         backgroundColor: secondaryColor,
                       ),

@@ -1,3 +1,4 @@
+import 'package:alumnex/alumn_global.dart';
 import 'package:alumnex/alumnex_view_profile_page.dart';
 import 'package:flutter/material.dart';
 import 'alumnex_database_connection_page.dart';
@@ -69,7 +70,7 @@ late Future<List<dynamic>> leaderboard;
                       radius: 40,
                       backgroundColor: primaryColor,
                       backgroundImage: NetworkImage(
-                        'http://10.149.248.153:5000/get-profile/${data[index]["_id"]}',
+                        '$urI/get-profile/${data[index]["_id"]}',
                       ),
                       onBackgroundImageError: (_, __) {},
                     ),
@@ -153,7 +154,7 @@ late Future<List<dynamic>> leaderboard;
                   child: ListTile(
                     leading: ClipOval(
                       child: Image.network(
-                        'http://10.149.248.153:5000/get-profile/${others[index]["_id"]}',
+                        '$urI/get-profile/${others[index]["_id"]}',
                         width: 60,
                         height: 60,
                         fit: BoxFit.cover,

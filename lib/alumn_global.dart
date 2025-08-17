@@ -1,5 +1,8 @@
 import 'dart:ui';
 
+// http://10.149.248.153:5000
+final String urI = "https://alumnex-backend-flask.onrender.com";
+
 dynamic person = {
   "profile": "path",
   "name": "unique_lovely_boy",
