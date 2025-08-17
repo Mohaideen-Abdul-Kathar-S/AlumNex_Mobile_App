@@ -18,24 +18,24 @@ class AlumnexLeaderboardPage extends StatefulWidget {
 }
 
 class _AlumnexLeaderboardPageState extends State<AlumnexLeaderboardPage> {
-  late Future<List<dynamic>> leaderboard;
+
 
   // Theme colors
   final Color primaryColor = const Color(0xFF004d52);
   final Color accentColor = const Color(0xFFe27c43);
   final Color secondaryColor = const Color(0xFF224146);
 
+late Future<List<dynamic>> leaderboard;
+
   @override
   void initState() {
     super.initState();
-    _loadLeaderboard();
+    leaderboard = _loadLeaderboard();
   }
 
-  void _loadLeaderboard() async {
+  Future<List<dynamic>> _loadLeaderboard() async {
     final data = await DataBaseConnection().getLeaderboard();
-    setState(() {
-      leaderboard = Future.value(data);
-    });
+    return data;
   }
 
   Widget _buildTopThree(List<dynamic> data) {
@@ -117,93 +117,94 @@ class _AlumnexLeaderboardPageState extends State<AlumnexLeaderboardPage> {
         title: const Text('Leaderboard'),
         backgroundColor: primaryColor,
       ),
-      body: FutureBuilder<List<dynamic>>(
-        future: leaderboard,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          } else if (snapshot.hasError) {
-            return Center(
-                child: Text(
-              'Error: ${snapshot.error}',
-              style: TextStyle(color: accentColor),
-            ));
-          } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return Center(
-                child: Text(
-              'No leaderboard data available',
-              style: TextStyle(color: accentColor),
-            ));
-          } else {
-            final data = snapshot.data!;
-            final topThree = data.take(3).toList();
-            final others = data.length > 3 ? data.sublist(3) : [];
+       body: FutureBuilder<List<dynamic>>(
+  future: leaderboard,
+  builder: (context, snapshot) {
+    if (snapshot.connectionState == ConnectionState.waiting) {
+      return const Center(child: CircularProgressIndicator());
+    } else if (snapshot.hasError) {
+      return Center(
+          child: Text(
+        'Error: ${snapshot.error}',
+        style: TextStyle(color: accentColor),
+      ));
+    } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+      return Center(
+          child: Text(
+        'No leaderboard data available',
+        style: TextStyle(color: accentColor),
+      ));
+    } else {
+      final data = snapshot.data!;
+      final topThree = data.take(3).toList();
+      final others = data.length > 3 ? data.sublist(3) : [];
 
-            return Column(
-              children: [
-                _buildTopThree(topThree),
-                Expanded(
-                  child: ListView.builder(
-                    itemCount: others.length,
-                    itemBuilder: (context, index) {
-                      return Card(
-                        color: primaryColor.withOpacity(0.1),
-                        margin: const EdgeInsets.symmetric(
-                            vertical: 8.0, horizontal: 12.0),
-                        child: ListTile(
-                          leading: ClipOval(
-                            child: Image.network(
-                              'http://10.149.248.153:5000/get-profile/${others[index]["_id"]}',
-                              width: 60,
-                              height: 60,
-                              fit: BoxFit.cover,
-                              errorBuilder: (context, error, stackTrace) {
-                                return CircleAvatar(
-                                  radius: 30,
-                                  backgroundColor: primaryColor,
-                                  child: const Icon(
-                                    Icons.person,
-                                    size: 30,
-                                    color: Colors.white,
-                                  ),
-                                );
-                              },
+      return Column(
+        children: [
+          _buildTopThree(topThree),
+          Expanded(
+            child: ListView.builder(
+              itemCount: others.length,
+              itemBuilder: (context, index) {
+                return Card(
+                  color: primaryColor.withOpacity(0.1),
+                  margin: const EdgeInsets.symmetric(
+                      vertical: 8.0, horizontal: 12.0),
+                  child: ListTile(
+                    leading: ClipOval(
+                      child: Image.network(
+                        'http://10.149.248.153:5000/get-profile/${others[index]["_id"]}',
+                        width: 60,
+                        height: 60,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) {
+                          return CircleAvatar(
+                            radius: 30,
+                            backgroundColor: primaryColor,
+                            child: const Icon(
+                              Icons.person,
+                              size: 30,
+                              color: Colors.white,
                             ),
+                          );
+                        },
+                      ),
+                    ),
+                    title: Text(
+                      others[index]['name'] ?? others[index]['_id'],
+                      style: TextStyle(
+                        color: primaryColor,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    subtitle: Text(
+                      'Total Likes: ${others[index]['total_likes']}',
+                      style: TextStyle(color: accentColor),
+                    ),
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => AlumnexViewProfilePage(
+                            temprollno: others[index]['_id'],
+                            temproll: others[index]['rollno'],
+                            rollno: widget.rollno,
+                            roll: widget.roll,
                           ),
-                          title: Text(
-                            others[index]['name'] ?? data[index]['_id'],
-                            style: TextStyle(
-                              color: primaryColor,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          subtitle: Text(
-                            'Total Likes: ${others[index]['total_likes']}',
-                            style: TextStyle(color: accentColor),
-                          ),
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => AlumnexViewProfilePage(
-                                  temprollno: others[index]['_id'],
-                                  temproll: others[index]['rollno'],
-                                  rollno: widget.rollno,
-                                  roll: widget.roll,
-                                ),
-                              ),
-                            );
-                          },
                         ),
                       );
                     },
                   ),
-                ),
-              ],
-            );
-          }
-        },
-      ),
+                );
+              },
+            ),
+          ),
+        ],
+      );
+    }
+  },
+),
+
     );
   }
 }

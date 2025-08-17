@@ -11,6 +11,46 @@ class AlumnexTabCommunityPage extends StatefulWidget {
   final dynamic rollno;
 
   const AlumnexTabCommunityPage({super.key, required this.rollno});
+Future<Map<String, List<Map<String, dynamic>>>> fetchGroups() async {
+  print('Fetching groups for: $rollno');
+
+  final response = await http.get(
+    Uri.parse('http://10.149.248.153:5000/get_groups/$rollno'),
+    headers: {"Content-Type": "application/json"},
+  );
+
+  if (response.statusCode == 200) {
+    final Map<String, dynamic> data = jsonDecode(response.body);
+
+    // groups
+    final List<Map<String, dynamic>> groups = (data['groups'] as List)
+        .map((group) => {
+              'id': group['id'],
+              'name': group['name'],
+              'type': group['type'],
+              'description': group['description'] ?? "",
+            })
+        .toList();
+
+    // communities
+    final List<Map<String, dynamic>> communities = (data['communities'] as List)
+        .map((comm) => {
+              'id': comm['id'],
+              'name': comm['name'],
+              'type': comm['type'],
+              'description': comm['description'] ?? "",
+            })
+        .toList();
+
+    return {
+      "groups": groups,
+      "communities": communities,
+    };
+  } else {
+    throw Exception("Failed to load groups & communities");
+  }
+}
+
 
   @override
   State<AlumnexTabCommunityPage> createState() =>
@@ -26,27 +66,7 @@ class _AlumnexTabCommunityPageState extends State<AlumnexTabCommunityPage> {
 
   List<Map<String, String>> communities = [];
 
-  Future<List<Map<String, dynamic>>> _fetchGroups() async {
-    print('Fetching groups for: ${widget.rollno}');
 
-    final response = await http.get(
-      Uri.parse('http://10.149.248.153:5000/get_groups/${widget.rollno}'),
-      headers: {"Content-Type": "application/json"},
-    );
-
-    if (response.statusCode == 200) {
-      final List data = jsonDecode(response.body);
-      return data.map((group) {
-        return {
-          'name': group['name'],
-          'type': group['type'],
-          'id': group['id'],
-        };
-      }).toList();
-    } else {
-      throw Exception("Failed to load groups");
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -83,35 +103,55 @@ class _AlumnexTabCommunityPageState extends State<AlumnexTabCommunityPage> {
           // Groups Section
           _buildSectionTitle("Groups"),
           Expanded(
-            child: FutureBuilder<List<Map<String, dynamic>>>(
-              future: _fetchGroups(),
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(child: CircularProgressIndicator());
-                } else if (snapshot.hasError) {
-                  return Center(child: Text('Error: ${snapshot.error}'));
-                } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                  return const Center(child: Text('No groups available.'));
-                }
-            
-                final fetchedGroups = snapshot.data!;
-            
-               return ListView(
+  child: FutureBuilder<Map<String, List<Map<String, dynamic>>>>(
+    future: AlumnexTabCommunityPage(rollno: widget.rollno).fetchGroups(),
+    builder: (context, snapshot) {
+      if (snapshot.connectionState == ConnectionState.waiting) {
+        return const Center(child: CircularProgressIndicator());
+      } else if (snapshot.hasError) {
+        return Center(child: Text('Error: ${snapshot.error}'));
+      } else if (!snapshot.hasData) {
+        return const Center(child: Text('No groups or communities available.'));
+      }
+
+      final groups = snapshot.data!['groups'] ?? [];
+      final communities = snapshot.data!['communities'] ?? [];
+
+      return ListView(
         children: [
-          ...fetchedGroups.map(
-            (group) => _buildTile(
-              group['name'],       // ✅ Fix here
-              group['type'],
-              group['id'], // Temporarily using 'description' as ID placeholder
-            ),
-          ),
+          
+          if (groups.isEmpty)
+            const Padding(
+              padding: EdgeInsets.all(8.0),
+              child: Text("No groups available."),
+            )
+          else
+            ...groups.map((group) => _buildTile(
+                  group['name'],
+                  group['type'],
+                  group['id'],
+                )),
+
           const SizedBox(height: 20),
+
           _buildSectionTitle("Communities"),
+          if (communities.isEmpty)
+            const Padding(
+              padding: EdgeInsets.all(8.0),
+              child: Text("No communities available."),
+            )
+          else
+            ...communities.map((comm) => _buildTile(
+                  comm['name'],
+                  comm['type'],
+                  comm['id'],
+                )),
         ],
       );
-              },
-            ),
-          ),
+    },
+  ),
+),
+
         ],
       ),
     );

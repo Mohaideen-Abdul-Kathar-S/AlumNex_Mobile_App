@@ -99,31 +99,33 @@ class DataBaseConnection {
   }
 
   Future<String> uploadResume(File imageFile, String userId) async {
-    var uri = Uri.parse('http://10.149.248.153:5000/upload-Resume');
+    var uri = Uri.parse('http://10.149.248.153:8000/upload-resume');
+
+
 
     var request =
         http.MultipartRequest('POST', uri)
           ..fields['user_id'] = userId
           ..files.add(
-            await http.MultipartFile.fromPath(
-              'resume',
-              imageFile.path,
-              contentType: MediaType(
-                'application',
-                'pdf',
-              ), // Change to 'image/jpeg' if uploading image
-            ),
-          );
+  await http.MultipartFile.fromPath(
+    'file',  // must match FastAPI param name
+    imageFile.path,
+    contentType: MediaType('application', 'pdf'),
+  ),
+);
 
-    var response = await request.send();
 
-    if (response.statusCode == 200) {
-      print('✅ Resume Uploaded Successfully');
-      return 'Success';
-    } else {
-      print('❌ Resume Upload Failed');
-      return 'Failed';
-    }
+   var response = await request.send();
+var respStr = await response.stream.bytesToString();
+
+if (response.statusCode == 200) {
+  print('✅ Resume Uploaded Successfully: $respStr');
+  return 'Success';
+} else {
+  print('❌ Resume Upload Failed: ${response.statusCode}, $respStr');
+  return 'Failed';
+}
+
   }
 
   Future<void> uploadPost(Map<String, dynamic> postData) async {
@@ -301,4 +303,18 @@ class DataBaseConnection {
       return null;
     }
   }
+
+    Future<Map<String, dynamic>> fetchPollResults(String pollId) async {
+    final response = await http.get(
+      Uri.parse('http://10.149.248.153:5000/poll_results/$pollId'),
+    );
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception('Failed to load poll results');
+    }
+  }
+
+
 }

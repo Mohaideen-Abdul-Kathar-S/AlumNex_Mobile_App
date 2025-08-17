@@ -30,7 +30,7 @@ class _AlumnexIndexPageState extends State<AlumnexIndexPage> {
     TapsWidgets = [
     AlumnexPostPage(rollno: widget.rollno,roll : widget.roll),
     AlumnexEventPage(rollno: widget.rollno),
-    AlumnexChatsPage(rollno: widget.rollno),
+    AlumnexChatsPage(rollno: widget.rollno,roll : widget.roll),
     AlumnexProfilePage(rollno: widget.rollno,roll : widget.roll),
   ];
   }

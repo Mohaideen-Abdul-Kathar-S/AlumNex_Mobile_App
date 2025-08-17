@@ -17,12 +17,31 @@ class AlumnexPostPage extends StatefulWidget {
   State<AlumnexPostPage> createState() => _AlumnexPostPageState();
 }
 
+Widget buildPost(dynamic post) {
+  return post['postImageId'] != null
+      ? Image.network(
+        'http://10.149.248.153:5000/get-post-image/${post['postImageId']}',
+        height: 300,
+        width: double.infinity,
+        fit: BoxFit.cover,
+        errorBuilder:
+            (context, error, stackTrace) => Container(
+              height: 300,
+              color: Colors.grey[300],
+              child: Center(child: Text('Image Not Found')),
+            ),
+      )
+      : Container(
+        height: 300,
+        color: Colors.grey[300],
+        child: Center(child: Text('No Image')),
+      );
+}
+
 class _AlumnexPostPageState extends State<AlumnexPostPage> {
   final Color primaryColor = const Color(0xFF004d52);
   final Color accentColor = const Color(0xFFe27c43);
   final Color secondaryColor = const Color(0xFF224146);
-
-  
 
   String pageName = 'Posts';
   late Future<List<dynamic>> _postsFuture;
@@ -32,70 +51,151 @@ class _AlumnexPostPageState extends State<AlumnexPostPage> {
   Timer? _debounce;
   List<ChatMessage> messages = [];
   TextEditingController _controller = TextEditingController();
-  ScrollController _scrollController = ScrollController(); 
+  ScrollController _scrollController = ScrollController();
 
-
-
-   @override
+  List<dynamic> connections = [];
+  bool isLoading = true;
+  final String apiUrl = 'http://10.149.248.153:5000';
+  List<String> likedPosts = [];
+  @override
   void initState() {
     super.initState();
     rollno = widget.rollno;
-
+    fetchConnections();
     _postsFuture = fetchPosts();
+    fetchSavedPosts(rollno);
+  }
+
+  Future<void> fetchSavedPosts(String rollno) async {
+    print("getSavedPosts called with rollno: $rollno");
+    final response = await http.get(
+      Uri.parse('http://10.149.248.153:5000/getSavedPosts/$rollno'),
+    );
+
+    if (response.statusCode == 200) {
+      print(response.body);
+      final List<dynamic> decoded = jsonDecode(response.body);
+
+    // Convert dynamic list to List<String>
+    setState(() {
+      likedPosts = decoded.map((e) => e.toString()).toList();
+    });
+
+      print("Saved Posts: $likedPosts");
+    } else {
+      throw Exception('Failed to load Saved Posts');
+    }
+  }
+
+  void _sendMessages(String postid, String reciever) async {
+    final text = widget.rollno + " sent post for you -> " + postid;
+    if (text.isEmpty) return;
+
+    final message = {
+      'sender': widget.rollno,
+      'receiver': reciever,
+      'text': text,
+    };
+
+    final response = await http.post(
+      Uri.parse('$apiUrl/send_message'),
+      headers: {'Content-Type': 'application/json'},
+      body: json.encode(message),
+    );
+
+    if (response.statusCode == 200) {
+      Future.delayed(Duration(milliseconds: 100), () {
+        _scrollController.animateTo(
+          _scrollController.position.maxScrollExtent,
+          duration: Duration(milliseconds: 300),
+          curve: Curves.easeOut,
+        );
+      });
+    }
+  }
+
+  Future<void> fetchConnections() async {
+    final res = await http.get(
+      Uri.parse('http://10.149.248.153:5000/get_connections/${widget.rollno}'),
+    );
+
+    if (res.statusCode == 200) {
+      List ids = jsonDecode(res.body);
+      List<dynamic> tempUsers = [];
+
+      for (var id in ids) {
+        final userRes = await http.get(
+          Uri.parse('http://10.149.248.153:5000/get_user/$id'),
+        );
+
+        if (userRes.statusCode == 200) {
+          final userData = jsonDecode(userRes.body);
+          tempUsers.add(userData);
+        }
+      }
+
+      setState(() {
+        connections = tempUsers;
+        isLoading = false;
+      });
+    } else {
+      setState(() {
+        isLoading = false;
+      });
+      print("Error fetching connections");
+    }
   }
 
   Future<void> sendMessage(String message) async {
-  print("In calling sec $message");
+    print("In calling sec $message");
 
-  final url = Uri.parse('http://10.149.248.153:5000/aura_assistant');
+    final url = Uri.parse('http://10.149.248.153:5000/aura_assistant');
 
-  final response = await http.post(
-    url,
-    headers: {'Content-Type': 'application/json'},
-    body: jsonEncode({
-      "query": message,
-      "context": {
-        "id":rollno,
-        // "name": "Mohaideen",
-        // "branch": "CSD",
-        // "year": "3rd Year",
-        // "interests": ["Cloud Computing", "AI"]
-      }
-    }),
-  );
+    final response = await http.post(
+      url,
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        "query": message,
+        "context": {
+          "id": rollno,
+          // "name": "Mohaideen",
+          // "branch": "CSD",
+          // "year": "3rd Year",
+          // "interests": ["Cloud Computing", "AI"]
+        },
+      }),
+    );
 
-  if (response.statusCode == 200) {
-    final data = jsonDecode(response.body);
-    final aiReply = data['response'] ?? 'No response from AI.';
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      final aiReply = data['response'] ?? 'No response from AI.';
 
-    setState(() {
-      messages.add(ChatMessage(text: aiReply, isUser: false));
-    });
+      setState(() {
+        messages.add(ChatMessage(text: aiReply, isUser: false));
+      });
 
-    
-// Scroll to bottom after short delay to ensure UI has updated
-Future.delayed(Duration(milliseconds: 100), () {
-  _scrollController.animateTo(
-    _scrollController.position.maxScrollExtent,
-    duration: Duration(milliseconds: 300),
-    curve: Curves.easeOut,
-  );
-});
+      // Scroll to bottom after short delay to ensure UI has updated
+      Future.delayed(Duration(milliseconds: 100), () {
+        _scrollController.animateTo(
+          _scrollController.position.maxScrollExtent,
+          duration: Duration(milliseconds: 300),
+          curve: Curves.easeOut,
+        );
+      });
 
-
-
-
-    print('AI Response: $aiReply');
-  } else {
-    setState(() {
-      messages.add(ChatMessage(
-          text: 'Error: ${response.statusCode}\n${response.body}',
-          isUser: false));
-    });
-    print('Error: ${response.body}');
+      print('AI Response: $aiReply');
+    } else {
+      setState(() {
+        messages.add(
+          ChatMessage(
+            text: 'Error: ${response.statusCode}\n${response.body}',
+            isUser: false,
+          ),
+        );
+      });
+      print('Error: ${response.body}');
+    }
   }
-}
-
 
   Future<void> searchUsers(String query) async {
     if (query.isEmpty) {
@@ -127,8 +227,6 @@ Future.delayed(Duration(milliseconds: 100), () {
       throw Exception('Failed to load poll results');
     }
   }
-
- 
 
   Future<List<dynamic>> fetchPosts() async {
     final response = await http.get(
@@ -165,8 +263,6 @@ Future.delayed(Duration(milliseconds: 100), () {
     }
   }
 
-  
-
   Widget _buildChatBotScreen() {
     return Container(
       height: 700, // Set the height for the mini screen
@@ -180,7 +276,7 @@ Future.delayed(Duration(milliseconds: 100), () {
           Padding(
             padding: const EdgeInsets.all(8.0),
             child: Text(
-              'Chatbot Assistant',
+              'Aura Assistant',
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
@@ -191,69 +287,74 @@ Future.delayed(Duration(milliseconds: 100), () {
           Divider(),
           // Chat messages or UI goes here
           Expanded(
-  child: ListView.builder(
-    controller: _scrollController, // ✅ Add controller here
-    itemCount: messages.length,
-    itemBuilder: (context, index) {
-      final message = messages[index];
-      return ListTile(
-        title: Align(
-          alignment:
-              message.isUser ? Alignment.centerRight : Alignment.centerLeft,
-          child: Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: message.isUser ? Colors.blue[100] : Colors.grey[300],
-              borderRadius: BorderRadius.circular(10),
+            child: ListView.builder(
+              controller: _scrollController, // ✅ Add controller here
+              itemCount: messages.length,
+              itemBuilder: (context, index) {
+                final message = messages[index];
+                return ListTile(
+                  title: Align(
+                    alignment:
+                        message.isUser
+                            ? Alignment.centerRight
+                            : Alignment.centerLeft,
+                    child: Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color:
+                            message.isUser
+                                ? Colors.blue[100]
+                                : Colors.grey[300],
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Text(message.text),
+                    ),
+                  ),
+                );
+              },
             ),
-            child: Text(message.text),
           ),
-        ),
-      );
-    },
-  ),
-),
 
           // Text field for user to type message
           Padding(
             padding: const EdgeInsets.all(8.0),
             child: Row(
-  children: [
-    Expanded(
-      child: TextField(
-        controller: _controller,
-        decoration: InputDecoration(hintText: 'Type your message...'),
-      ),
-    ),
-    IconButton(
-      icon: Icon(Icons.send),
-      onPressed: () async {
-  final text = _controller.text.trim();
-  if (text.isNotEmpty) {
-    setState(() {
-      messages.add(ChatMessage(text: text, isUser: true));
-    });
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _controller,
+                    decoration: InputDecoration(
+                      hintText: 'Type your message...',
+                    ),
+                  ),
+                ),
+                IconButton(
+                  icon: Icon(Icons.send),
+                  onPressed: () async {
+                    final text = _controller.text.trim();
+                    if (text.isNotEmpty) {
+                      setState(() {
+                        messages.add(ChatMessage(text: text, isUser: true));
+                      });
 
-    _controller.clear();
+                      _controller.clear();
 
-    // Scroll to bottom after user message
-    Future.delayed(Duration(milliseconds: 100), () {
-      _scrollController.animateTo(
-        _scrollController.position.maxScrollExtent,
-        duration: Duration(milliseconds: 300),
-        curve: Curves.easeOut,
-      );
-    });
+                      // Scroll to bottom after user message
+                      Future.delayed(Duration(milliseconds: 100), () {
+                        _scrollController.animateTo(
+                          _scrollController.position.maxScrollExtent,
+                          duration: Duration(milliseconds: 300),
+                          curve: Curves.easeOut,
+                        );
+                      });
 
-    // Await sending message (important!)
-    await sendMessage(text);
-  }
-},
-
-    ),
-  ],
-),
-
+                      // Await sending message (important!)
+                      await sendMessage(text);
+                    }
+                  },
+                ),
+              ],
+            ),
           ),
         ],
       ),
@@ -351,27 +452,6 @@ Future.delayed(Duration(milliseconds: 100), () {
         );
       },
     );
-  }
-
-  Widget buildPost(dynamic post) {
-    return post['postImageId'] != null
-        ? Image.network(
-          'http://10.149.248.153:5000/get-post-image/${post['postImageId']}',
-          height: 300,
-          width: double.infinity,
-          fit: BoxFit.cover,
-          errorBuilder:
-              (context, error, stackTrace) => Container(
-                height: 300,
-                color: Colors.grey[300],
-                child: Center(child: Text('Image Not Found')),
-              ),
-        )
-        : Container(
-          height: 300,
-          color: Colors.grey[300],
-          child: Center(child: Text('No Image')),
-        );
   }
 
   @override
@@ -593,19 +673,17 @@ Future.delayed(Duration(milliseconds: 100), () {
                                 ),
                                 IconButton(
                                   onPressed: () {
-                                    
-                            Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder:
-                                    (context) => AlumnexViewProfilePage(
-                                      temprollno: post['rollno'],
-                                      temproll: post['roll'],
-                                      rollno: rollno,
-                                      roll: widget.roll,
-                                    ),
-                              ),
-                            );
-                        
+                                    Navigator.of(context).push(
+                                      MaterialPageRoute(
+                                        builder:
+                                            (context) => AlumnexViewProfilePage(
+                                              temprollno: post['rollno'],
+                                              temproll: post['roll'],
+                                              rollno: rollno,
+                                              roll: widget.roll,
+                                            ),
+                                      ),
+                                    );
                                   },
                                   icon: Icon(Icons.keyboard_double_arrow_right),
                                 ),
@@ -668,7 +746,9 @@ Future.delayed(Duration(milliseconds: 100), () {
                                         } else if (snapshot.hasError) {
                                           return Text("Error");
                                         } else {
-                                          return Text('${snapshot.data?[0]} Likes');
+                                          return Text(
+                                            '${snapshot.data?[0]} Likes',
+                                          );
                                         }
                                       },
                                     ),
@@ -809,19 +889,171 @@ Future.delayed(Duration(milliseconds: 100), () {
                                         } else if (snapshot.hasError) {
                                           return Text("Error");
                                         } else {
-                                          return Text('${snapshot.data?[1]} Commands');
+                                          return Text(
+                                            '${snapshot.data?[1]} Commands',
+                                          );
                                         }
                                       },
                                     ),
                                   ],
                                 ),
                                 Column(
-                                  children: [Icon(Icons.share), Text('Share')],
+                                  children: [
+                                    IconButton(
+                                      icon: Icon(Icons.share),
+                                      onPressed: () {
+                                        showModalBottomSheet(
+                                          context: context,
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.vertical(
+                                              top: Radius.circular(20),
+                                            ),
+                                          ),
+                                          builder: (context) {
+                                            return Padding(
+                                              padding: const EdgeInsets.all(
+                                                16.0,
+                                              ),
+                                              child: Column(
+                                                mainAxisSize: MainAxisSize.min,
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
+                                                children: [
+                                                  Text(
+                                                    "Share Post",
+                                                    style: TextStyle(
+                                                      fontSize: 18,
+                                                      fontWeight:
+                                                          FontWeight.bold,
+                                                    ),
+                                                  ),
+                                                  SizedBox(height: 10),
+
+                                                  // List of connections
+                                                  connections.isNotEmpty
+                                                      ? ListView.builder(
+                                                        shrinkWrap:
+                                                            true, // Important for bottom sheet
+                                                        physics:
+                                                            NeverScrollableScrollPhysics(),
+                                                        itemCount:
+                                                            connections.length,
+                                                        itemBuilder: (
+                                                          context,
+                                                          index,
+                                                        ) {
+                                                          final user =
+                                                              connections[index];
+                                                          return ListTile(
+                                                            leading: CircleAvatar(
+                                                              backgroundImage:
+                                                                  user['profile'] !=
+                                                                          null
+                                                                      ? NetworkImage(
+                                                                        user['profile'],
+                                                                      )
+                                                                      : AssetImage(
+                                                                            'assets/default_profile.png',
+                                                                          )
+                                                                          as ImageProvider,
+                                                            ),
+                                                            title: Text(
+                                                              user['_id'] ??
+                                                                  'Unknown User',
+                                                            ),
+                                                            subtitle: Text(
+                                                              user['roll'] ??
+                                                                  '',
+                                                            ),
+                                                            trailing: IconButton(
+                                                              icon: Icon(
+                                                                Icons.send,
+                                                                color:
+                                                                    Colors.blue,
+                                                              ),
+                                                              onPressed: () {
+                                                                Navigator.pop(
+                                                                  context,
+                                                                );
+                                                                _sendMessages(
+                                                                  post['_id'], // Pass post ID
+                                                                  user['_id'], // Pass user ID
+                                                                );
+                                                              },
+                                                            ),
+                                                          );
+                                                        },
+                                                      )
+                                                      : Center(
+                                                        child: Padding(
+                                                          padding:
+                                                              const EdgeInsets.all(
+                                                                8.0,
+                                                              ),
+                                                          child: Text(
+                                                            "No connections found",
+                                                          ),
+                                                        ),
+                                                      ),
+                                                ],
+                                              ),
+                                            );
+                                          },
+                                        );
+                                      },
+                                    ),
+                                    Text('Share'),
+                                  ],
                                 ),
                                 Column(
                                   children: [
-                                    Icon(Icons.bookmark),
-                                    Text('Save'),
+                                    IconButton(
+                                      icon: Icon(
+                                        likedPosts.contains(post['_id'])
+                                            ? Icons.bookmark
+                                            : Icons.bookmark_border,
+                                        color:
+                                            likedPosts.contains(post['_id'])
+                                                ? Colors.blue
+                                                : Colors.grey,
+                                      ),
+                                      onPressed: () async {
+                                        final postId = post['_id'];
+                                        final userId =
+                                            rollno; // use your logged-in user's rollno
+                                        print(
+                                          "Toggling save for post: $postId by user: $userId",
+                                        );
+                                        final response = await http.get(
+                                          Uri.parse(
+                                            'http://10.149.248.153:5000/saveposts/$userId/$postId',
+                                          ),
+                                        );
+
+                                        if (response.statusCode == 200) {
+                                          print(likedPosts);
+                                          setState(() {
+                                            if (likedPosts.contains(postId)) {
+                                              likedPosts.remove(
+                                                postId,
+                                              ); // toggle locally
+                                            } else {
+                                              likedPosts.add(postId);
+                                            }
+                                          });
+                                          print(likedPosts);
+                                        } else {
+                                          print(
+                                            "Error saving post: ${response.body}",
+                                          );
+                                        }
+                                      },
+                                    ),
+                                    Text(
+                                      likedPosts.contains(post['_id'])
+                                          ? "Saved"
+                                          : "Save",
+                                    ),
                                   ],
                                 ),
                               ],

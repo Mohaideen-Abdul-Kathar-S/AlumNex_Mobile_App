@@ -1,15 +1,26 @@
 import 'dart:convert';
+import 'dart:io';
+import 'package:open_file/open_file.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:alumnex/alumnex_add_meet_members_page.dart';
 import 'package:alumnex/alumnex_create_meeting_page.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+  import 'package:intl/intl.dart';
 
 
 class AlumnexTabMeetPage extends StatefulWidget {
   final dynamic rollno; // user id
 
   const AlumnexTabMeetPage({super.key, required this.rollno});
+  Future<void> launchURL(String link) async {
+  final Uri uri = Uri.parse(link.startsWith('http') ? link : 'https://$link');
+
+  if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
+    throw 'Could not launch $link';
+  }
+}
 
   @override
   State<AlumnexTabMeetPage> createState() => _AlumnexTabMeetPageState();
@@ -32,10 +43,30 @@ class _AlumnexTabMeetPageState extends State<AlumnexTabMeetPage> {
     fetchMeetings();
     fetchAssignedMeetings();
   }
+ 
+ Future<void> getCertificate(String meetId, String studentId) async {
+  final url = Uri.parse("http://10.149.248.153:5000/certificate_file/$meetId/$studentId");
+
+  final response = await http.get(url);
+
+  if (response.statusCode == 200) {
+    final bytes = response.bodyBytes;
+    final dir = await getApplicationDocumentsDirectory();
+    final file = File("${dir.path}/certificate_${studentId}_$meetId.pdf");
+    await file.writeAsBytes(bytes);
+
+    print("✅ Certificate downloaded: ${file.path}");
+    OpenFile.open(file.path); // requires open_filex package
+  } else {
+    print("❌ Error: ${response.body}");
+  }
+}
+
 
   Future<void> fetchMeetings() async {
+    print("host meetings");
     final response = await http.get(
-      Uri.parse('http:/10.149.248.153:5000/meetings/${widget.rollno}'),
+      Uri.parse('http://10.149.248.153:5000/meetings/${widget.rollno}'),
     );
 
     if (response.statusCode == 200) {
@@ -179,6 +210,8 @@ class _AlumnexTabMeetPageState extends State<AlumnexTabMeetPage> {
                           "${meeting['date']}, ${meeting['start_time']}",
                           meeting['_id'],
                           meeting['link'],
+                          meeting['date'],
+                          meeting['end_time'],
                         );
                       },
                     ),
@@ -188,7 +221,7 @@ class _AlumnexTabMeetPageState extends State<AlumnexTabMeetPage> {
     );
   }
 
-Future<void> _launchURL(String link) async {
+Future<void> launchURL(String link) async {
   final Uri uri = Uri.parse(link.startsWith('http') ? link : 'https://$link');
 
   if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
@@ -229,6 +262,8 @@ Future<void> _launchURL(String link) async {
     String dateTime,
     String meetId,
     String link,
+    String date,
+    String endTime,
   ) {
     return Card(
       elevation: 2,
@@ -242,9 +277,41 @@ Future<void> _launchURL(String link) async {
           size: 16,
           color: secondaryColor,
         ),
-        onTap: () {
-          _launchURL(link);
-        },
+      
+
+// inside your onTap:
+onTap: () {
+  final now = DateTime.now();
+
+  // Example values from your data
+
+
+  // Parse the date string
+  final datePart = DateFormat("yyyy-MM-dd").parse(date);
+
+  // Parse the time string
+  final timePart = DateFormat("h:mm a").parse(endTime);
+
+  // Merge date + time into one DateTime
+  final endDateTime = DateTime(
+    datePart.year,
+    datePart.month,
+    datePart.day,
+    timePart.hour,
+    timePart.minute,
+  );
+
+  if (endDateTime.isAfter(now)) {
+    launchURL(link);  // meeting ended → open link
+  } else {
+    // Not ended yet → show message
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text("Meeting is over, cannot join now.")),
+    );
+    getCertificate(meetId, widget.rollno);
+  }
+},
+
       ),
     );
   }

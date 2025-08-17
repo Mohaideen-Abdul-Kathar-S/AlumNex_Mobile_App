@@ -109,6 +109,7 @@ class _AlumnexTabChatsPageState extends State<AlumnexTabChatsPage> {
                             builder:
                                 (context) => AlumnexIndividualChatScreen(
                                   sender: widget.rollno,
+                                  roll: widget.rollno,
                                   reciever: user['_id'],
                                 ),
                           ),

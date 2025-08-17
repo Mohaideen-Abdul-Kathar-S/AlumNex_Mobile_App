@@ -10,8 +10,10 @@ import 'package:http/http.dart' as http;
 
 class AlumnexChatsPage extends StatefulWidget {
   final dynamic rollno;
+  
+  final dynamic roll;
 
-  const AlumnexChatsPage({super.key,required this.rollno});
+  const AlumnexChatsPage({super.key,required this.rollno,required this.roll});
 
   @override
   State<AlumnexChatsPage> createState() => _AlumnexChatsPageState();
@@ -207,6 +209,7 @@ class _AlumnexChatsPageState extends State<AlumnexChatsPage> {
                             builder:
                                 (context) => AlumnexIndividualChatScreen(
                                   sender: widget.rollno,
+                                  roll: widget.roll,
                                   reciever: user['_id'],
                                 ),
                           ),

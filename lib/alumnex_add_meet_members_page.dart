@@ -1,5 +1,7 @@
 import 'dart:async';
+import 'dart:io';
 
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -13,6 +15,44 @@ class AlumnexAddMeetMembersPage extends StatefulWidget {
     required this.rollno,
     required this.meetId,
   });
+
+    static const base = 'http://10.149.248.153:5000';
+
+  // ---- Upload template PDF ----
+  static Future<Map<String, dynamic>> uploadTemplate(File pdfFile) async {
+    var request = http.MultipartRequest("POST", Uri.parse("$base/template"));
+    request.files.add(await http.MultipartFile.fromPath("file", pdfFile.path));
+    var res = await request.send();
+    if (res.statusCode == 200) {
+      var body = await res.stream.bytesToString();
+      return json.decode(body);
+    }
+    throw Exception('Template upload failed: ${res.statusCode}');
+  }
+
+  // ---- Upload host signature ----
+  static Future<Map<String, dynamic>> uploadSignature(String hostId, File sigFile) async {
+    var request = http.MultipartRequest("POST", Uri.parse("$base/signature"));
+    request.fields["host_id"] = hostId;
+    request.files.add(await http.MultipartFile.fromPath("file", sigFile.path));
+    var res = await request.send();
+    if (res.statusCode == 200) {
+      var body = await res.stream.bytesToString();
+      return json.decode(body);
+    }
+    throw Exception('Signature upload failed: ${res.statusCode}');
+  }
+
+  // ---- Distribute certificates ----
+  static Future<Map<String, dynamic>> distributeCertificates(String meetId) async {
+    final res = await http.post(
+      Uri.parse('$base/distribute_certificates'),
+      headers: {'Content-Type': 'application/json'},
+      body: json.encode({'meet_id': meetId}),
+    );
+    if (res.statusCode == 200) return json.decode(res.body);
+    throw Exception('Failed: ${res.statusCode} ${res.body}');
+  }
 
   @override
   State<AlumnexAddMeetMembersPage> createState() =>
@@ -33,6 +73,42 @@ class _AlumnexAddMeetMembersPageState extends State<AlumnexAddMeetMembersPage> {
     super.initState();
     fetchMeetingDetails();
   }
+  File? templateFile;
+File? signatureFile;
+
+Future<void> pickTemplate() async {
+  FilePickerResult? result = await FilePicker.platform.pickFiles(type: FileType.custom, allowedExtensions: ["pdf"]);
+  if (result != null) {
+    setState(() {
+      templateFile = File(result.files.single.path!);
+    });
+  }
+}
+
+Future<void> pickSignature() async {
+  FilePickerResult? result = await FilePicker.platform.pickFiles(type: FileType.image);
+  if (result != null) {
+    setState(() {
+      signatureFile = File(result.files.single.path!);
+    });
+  }
+}
+
+  Future<void> generateAllCertificates(
+    String meetId, String hostId, File templateFile, File signatureFile) async {
+  
+  // 1. Upload template (only once per app unless changed)
+  await AlumnexAddMeetMembersPage.uploadTemplate(templateFile);
+
+  // 2. Upload host signature (per alumni/host)
+  await AlumnexAddMeetMembersPage.uploadSignature(hostId, signatureFile);
+
+  // 3. Now distribute certificates for all members in the meeting
+  final result = await AlumnexAddMeetMembersPage.distributeCertificates(meetId);
+
+  print("Certificates generated: ${result['generated_count']}");
+}
+
 
   Future<void> fetchMeetingDetails() async {
     final response = await http.get(
@@ -79,6 +155,8 @@ class _AlumnexAddMeetMembersPageState extends State<AlumnexAddMeetMembersPage> {
       ).showSnackBar(SnackBar(content: Text("Failed to add member")));
     }
   }
+
+ 
 
   Future<void> addGroupMembers(String groupType) async {
     final response = await http.post(
@@ -363,6 +441,30 @@ class _AlumnexAddMeetMembersPageState extends State<AlumnexAddMeetMembersPage> {
                             onPressed: () => addGroupMembers("connection"),
                             child: const Text("Add Connection Members"),
                           ),
+                          Column(
+  children: [
+    ElevatedButton(
+      onPressed: pickTemplate,
+      child: const Text("Pick Certificate Template"),
+    ),
+    ElevatedButton(
+      onPressed: pickSignature,
+      child: const Text("Pick Signature"),
+    ),
+    ElevatedButton(
+      onPressed: () async {
+        if (templateFile != null && signatureFile != null) {
+          await generateAllCertificates(meetingData!['_id'],meetingData!['host_id'], templateFile!, signatureFile!);
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("Please pick both template and signature")),
+          );
+        }
+      },
+      child: const Text("Generate All Certificates"),
+    ),
+  ],
+),
                         ],
                       ),
                     ],

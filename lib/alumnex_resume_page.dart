@@ -2,7 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
-
+import 'package:syncfusion_flutter_pdfviewer/pdfviewer.dart';
 
 class AlumnexResumePage extends StatefulWidget {
   final String rollno;
@@ -15,6 +15,7 @@ class AlumnexResumePage extends StatefulWidget {
 
 class _AlumnexResumePageState extends State<AlumnexResumePage> {
   File? _resumeFile;
+  bool _loading = true;
 
   @override
   void initState() {
@@ -33,8 +34,10 @@ class _AlumnexResumePageState extends State<AlumnexResumePage> {
 
       setState(() {
         _resumeFile = file;
+        _loading = false;
       });
     } else {
+      setState(() => _loading = false);
       print('❌ Resume not found.');
     }
   }
@@ -42,54 +45,17 @@ class _AlumnexResumePageState extends State<AlumnexResumePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-  appBar: AppBar(title: Text('View Resume')),
-  body: Center(
-    child: Card(
-      elevation: 4,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
-      margin: const EdgeInsets.all(16),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          _resumeFile != null
-              ? Image.file(
-                  _resumeFile!,
-                  width: double.infinity,
-                  height: 300,
-                  fit: BoxFit.cover,
-                )
-              : Image.network(
-                  'http://10.149.248.153:5000/get-resume/${widget.rollno}',
-                  width: double.infinity,
-                  height: 300,
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) {
-                    return Container(
-                      width: double.infinity,
-                      height: 400,
-                      color: Colors.grey.shade300,
-                      child: Icon(
-                        Icons.insert_drive_file,
-                        size: 80,
-                        color: Colors.grey.shade700,
-                      ),
-                    );
-                  },
+      appBar: AppBar(title: const Text('View Resume')),
+      body: _loading
+          ? const Center(child: CircularProgressIndicator())
+          : _resumeFile != null
+              ? SfPdfViewer.file(_resumeFile!)   // ✅ Show PDF
+              : const Center(
+                  child: Text(
+                    'Resume not found',
+                    style: TextStyle(fontSize: 16, color: Colors.red),
+                  ),
                 ),
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Text(
-              'My Resume',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-          ),
-        ],
-      ),
-    ),
-  ),
-);
-
+    );
   }
 }

@@ -2,6 +2,8 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:alumnex/alumn_global.dart';
 import 'package:alumnex/alumnex_database_connection_page.dart';
+import 'package:alumnex/alumnex_resume_page.dart';
+import 'package:alumnex/alumnex_tab_meet_page.dart';
 
 import 'package:alumnex/alumnex_view_sideSheets_page.dart';
 import 'package:flutter/material.dart';
@@ -169,6 +171,7 @@ class _AlumnexViewProfilePageState extends State<AlumnexViewProfilePage> {
                               color: Colors.white,
                               child: AlumnexViewSidesheetsPage(
                                 roll: widget.temproll,
+                                trollno: widget.temprollno,
                               ),
                             ),
                           ),
@@ -216,8 +219,26 @@ class _AlumnexViewProfilePageState extends State<AlumnexViewProfilePage> {
               style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
             ),
             Text(
-              '${person['programbranch']} (${person['Batch']})',
+              '${person['fields']['Program Branch']} (${person['fields']['Batch']})',
               style: TextStyle(fontSize: 18),
+            ),
+            ListTile(
+              leading: Icon(Icons.link),
+              title: Text("Resume"),
+              subtitle: Text("View my profile"),
+              trailing: IconButton(
+                icon: Icon(Icons.keyboard_double_arrow_right, ), onPressed: () {  },
+                
+              ),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder:
+                        (context) => AlumnexResumePage(rollno: person["_id"]),
+                  ),
+                );
+              },
             ),
 
             // 🔥 Show Profile Data Dynamically
@@ -231,8 +252,12 @@ class _AlumnexViewProfilePageState extends State<AlumnexViewProfilePage> {
                   ),
                   title: Text(entry.value[0]),
                   subtitle: Text(entry.value[1]),
-                  onTap: () {
-                    // your tap action here
+                  onTap: () async {
+                    // your link
+
+                    AlumnexTabMeetPage(
+                      rollno: widget.rollno,
+                    ).launchURL(entry.value[2]);
                   },
                 );
               } else {

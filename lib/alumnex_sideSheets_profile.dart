@@ -25,11 +25,17 @@ class _AlumnexSidesheetsProfileState extends State<AlumnexSidesheetsProfile> {
     super.initState();
     roll = widget.roll;
     // Initialize controllers for each editable field
-    person.forEach((key, value) {
-      if (value is String) {
-        controllers[key] = TextEditingController(text: value);
-      }
-    });
+    
+(person?['fields']??fakeFields)?.forEach((key, value) {
+  if (value is String) {
+    controllers[key] = TextEditingController(text: value);
+  } else if (value is List) {
+    for (int i = 0; i < value.length; i++) {
+      controllers["$key$i"] = TextEditingController(text: value[i]);
+    }
+  }
+});
+
   }
 
   Widget _buildSectionTitle(String title) {
@@ -47,7 +53,7 @@ class _AlumnexSidesheetsProfileState extends State<AlumnexSidesheetsProfile> {
   }
 
   Widget _buildInfoRow(String label, String key, {bool editable = true}) {
-    final value = person[key];
+    final value = person["fields"][key];
 
     if (value is List) {
       return Padding(
@@ -72,7 +78,7 @@ class _AlumnexSidesheetsProfileState extends State<AlumnexSidesheetsProfile> {
                                 controllers["$key$i"] ??= TextEditingController(
                                   text: value[i],
                                 ),
-                            onChanged: (val) => person[key][i] = val,
+                            onChanged: (val) => person["fields"][key][i] = val,
                             decoration: const InputDecoration(isDense: true),
                           ),
                         ),
@@ -80,7 +86,7 @@ class _AlumnexSidesheetsProfileState extends State<AlumnexSidesheetsProfile> {
                           icon: const Icon(Icons.delete, size: 18),
                           onPressed: () {
                             setState(() {
-                              person[key].removeAt(i);
+                              person["fields"][key].removeAt(i);
                               controllers.remove("$key$i");
                             });
                           },
@@ -90,7 +96,7 @@ class _AlumnexSidesheetsProfileState extends State<AlumnexSidesheetsProfile> {
                   TextButton.icon(
                     onPressed: () {
                       setState(() {
-                        person[key].add("");
+                        person["fields"][key].add("");
                       });
                     },
                     icon: const Icon(Icons.add, size: 16),
@@ -144,8 +150,18 @@ class _AlumnexSidesheetsProfileState extends State<AlumnexSidesheetsProfile> {
       if (!isEdit) {
         // Save the data
         controllers.forEach((key, controller) {
-          person[key] = controller.text;
-        });
+  if (key.contains(RegExp(r'\d+$'))) {
+    // list field
+    final field = key.replaceAll(RegExp(r'\d+$'), "");
+    final index = int.parse(key.replaceAll(RegExp(r'^\D+'), ""));
+    if (person["fields"][field] is List) {
+      person["fields"][field][index] = controller.text;
+    }
+  } else {
+    person["fields"][key] = controller.text;
+  }
+});
+
         // Debug print or you can implement real saving logic
         print('Updated info: $person');
         if (200 == DataBaseConnection().updatepersonalinfo(person)) {
@@ -201,7 +217,7 @@ class _AlumnexSidesheetsProfileState extends State<AlumnexSidesheetsProfile> {
                 Align(
                   alignment: Alignment.centerLeft,
                   child: Text(
-                    "Hi!!!, it's ${person['name']}",
+                    "Hi!!!, it's ${person['fields']['Full Name']}",
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
@@ -213,14 +229,14 @@ class _AlumnexSidesheetsProfileState extends State<AlumnexSidesheetsProfile> {
 
                 _buildSectionTitle("BASIC INFORMATION"),
                 _buildInfoRow("Gender", "Gender"),
-                _buildInfoRow("Email ID", "email"),
-                _buildInfoRow("Phone Number", "phoneno"),
-                _buildInfoRow("Location", "location"),
+                _buildInfoRow("Email ID", "Email"),
+                _buildInfoRow("Phone Number", "Phone Number"),
+                _buildInfoRow("Location", "Location"),
 
                 _buildSectionTitle("ACADEMIC DETAILS"),
                 _buildInfoRow(
                   "Programme & Branch",
-                  "programbranch",
+                  "Program Branch",
                   editable: false,
                 ),
                 _buildInfoRow("Current Year", "year", editable: false),
@@ -228,23 +244,23 @@ class _AlumnexSidesheetsProfileState extends State<AlumnexSidesheetsProfile> {
                 _buildInfoRow("Roll Number", "_id", editable: false),
 
                 _buildSectionTitle("CAREER INTERESTS"),
-                _buildInfoRow("Domain", "domain"),
-                _buildInfoRow("Preferred Roles", "preferredroll"),
-                _buildInfoRow("Higher Studies", "Higherstudies"),
-                _buildInfoRow("Target Companies", "Dreamcompany"),
+                _buildInfoRow("Domain", "Domain"),
+                _buildInfoRow("Preferred Roles", "Preferred Role"),
+                _buildInfoRow("Higher Studies", "Higher Studies"),
+                _buildInfoRow("Target Companies", "Dream Company"),
 
                 _buildSectionTitle("SKILLS & ACHIEVEMENTS"),
-                _buildInfoRow("Technical Skills", "TechSkills"),
-                _buildInfoRow("Certifications", "certificaion"),
-                _buildInfoRow("Projects", "projects"),
-                _buildInfoRow("Clubs/Leadership", "clubs"),
+                _buildInfoRow("Technical Skills", "Technical Skills"),
+                _buildInfoRow("Certifications", "Certification"),
+                _buildInfoRow("Projects", "Projects"),
+                _buildInfoRow("Clubs/Leadership", "Clubs"),
 
                 if (roll == "Alumni") ...[
                   _buildSectionTitle("CAREER INFORMATION"),
-                  _buildInfoRow("Current Job Title", "currentjob"),
-                  _buildInfoRow("Company", "company"),
-                  _buildInfoRow("Years of Experieance", "yoe"),
-                  _buildInfoRow("Worked In", "workedin"),
+                  _buildInfoRow("Current Job Title", "Current Job"),
+                  _buildInfoRow("Company", "Company"),
+                  _buildInfoRow("Years of Experieance", "Experience Year"),
+                  _buildInfoRow("Worked In", "Working In"),
                 ],
               ],
             ),

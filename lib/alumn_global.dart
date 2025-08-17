@@ -13,3 +13,26 @@ dynamic person = {
   final Color accentColor = const Color(0xFFe27c43);
   final Color secondaryColor = const Color(0xFF224146);
 
+dynamic fakeFields = {
+  "Full Name": "Nill",
+  "Email": "Nill",
+  "Skills": "Nill",
+  "Currently Studying": "Nill",
+  "Gender": "Nill",
+  "Phone Number": "Nill",
+  "Location": "Nill",
+  "Program Branch": "Nill",
+  "Batch": "Nill",
+  "Preferred Role": "Nill",
+  "Higher Studies": "Nill",
+  "Dream Company": "Nill",
+  "Technical Skills": "Nill",
+  "Certification": "Nill",
+  "Projects": "Nill",
+  "Clubs": "Nill",
+  "Domain": "Nill",
+  "Current Job": "Nill",
+  "Company": "Nill",
+  "Experience Year": "Nill",
+  "Working In": "Nill",
+};
