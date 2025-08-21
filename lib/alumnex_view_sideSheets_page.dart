@@ -1,6 +1,6 @@
 import 'dart:convert';
 
-import 'package:alumnex/alumn_global.dart';
+
 import 'package:alumnex/alumnex_database_connection_page.dart';
 import 'package:flutter/material.dart';
 

@@ -40,6 +40,7 @@ late Future<List<dynamic>> leaderboard;
   }
 
   Widget _buildTopThree(List<dynamic> data) {
+    print("data on leaderboard"+data.toString());
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 20),
       color: secondaryColor.withOpacity(0.5),
@@ -91,8 +92,13 @@ late Future<List<dynamic>> leaderboard;
                   ],
                 ),
                 const SizedBox(height: 6),
+                
                 Text(
-                  data[index]['name'] ?? data[index]['_id'],
+                  
+                  (data[index]?['fields']?['Full Name'] == null ||
+   data[index]?['fields']?['Full Name'] == "Nill")
+      ? (data[index]?['_id'] ?? "Unknown")
+      : data[index]?['fields']?['Full Name'] ?? "Unknown",
                   style: const TextStyle(
                     fontWeight: FontWeight.bold,
                     color: Colors.white,
@@ -172,9 +178,13 @@ late Future<List<dynamic>> leaderboard;
                       ),
                     ),
                     title: Text(
-                      others[index]['name'] ?? others[index]['_id'],
+                      (others[index]?['fields']?['Full Name'] == null ||
+   others[index]?['fields']?['Full Name'] == "Nill")
+      ? (others[index]?['_id'] ?? "Unknown")
+      : others[index]?['fields']?['Full Name'] ?? "Unknown",
+                    
                       style: TextStyle(
-                        color: primaryColor,
+                        color: Colors.white,
                         fontWeight: FontWeight.bold,
                       ),
                     ),

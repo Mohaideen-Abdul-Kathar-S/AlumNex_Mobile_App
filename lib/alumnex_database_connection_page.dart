@@ -100,7 +100,7 @@ class DataBaseConnection {
   }
 
   Future<String> uploadResume(File imageFile, String userId) async {
-    var uri = Uri.parse('http://10.149.248.153:8000/upload-resume');
+    var uri = Uri.parse('$urI2/upload-resume');
 
 
 

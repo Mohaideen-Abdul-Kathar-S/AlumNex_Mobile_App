@@ -1,9 +1,22 @@
 import 'dart:ui';
 
-// http://10.149.248.153:5000
-final String urI = "https://alumnex-backend-flask.onrender.com";
+
+
+// http://10.149.248.153:5000 
+// https://alumnex-backend-flask.onrender.com // http://10.106.108.153:5000
+final String urI = "http://10.106.108.153:5000";
+
+// http://10.149.248.153:8000
+// https://alumnex-backend-fastapi-vr83.onrender.com
+final String urI2 = "https://alumnex-backend.onrender.com";
+// https://alumnex-backend.onrender.com 
+
+// global variables
+String userID = "";
+String userRoll = "";
 
 dynamic person = {
+
   "profile": "path",
   "name": "unique_lovely_boy",
   

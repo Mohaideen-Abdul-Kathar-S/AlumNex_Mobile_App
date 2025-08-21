@@ -6,8 +6,10 @@ import 'package:flutter/material.dart';
 
 class AlumnexEventPage extends StatefulWidget {
   final dynamic rollno;
+  
+  final String roll;
 
-  const AlumnexEventPage({super.key,required this.rollno});
+  const AlumnexEventPage({super.key,required this.rollno,required this.roll});
 
   @override
   State<AlumnexEventPage> createState() => _AlumnexEventPageState();
@@ -63,9 +65,9 @@ class _AlumnexEventPageState extends State<AlumnexEventPage> {
         ),
         body: TabBarView(
           children: [
-            AlumnexOutsideCollegePage(rollno: rollno),
+            AlumnexOutsideCollegePage(rollno: rollno, roll: widget.roll),
             
-            AlumnexInsideCollegePage(rollno : rollno),
+            AlumnexInsideCollegePage(rollno : rollno, roll: widget.roll),
           ],
         ),
         

@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:alumnex/alumn_global.dart';
+import 'package:alumnex/alumnex_meet_certificates_page.dart';
 import 'package:open_file/open_file.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -45,23 +46,7 @@ class _AlumnexTabMeetPageState extends State<AlumnexTabMeetPage> {
     fetchAssignedMeetings();
   }
  
- Future<void> getCertificate(String meetId, String studentId) async {
-  final url = Uri.parse("$urI/certificate_file/$meetId/$studentId");
-
-  final response = await http.get(url);
-
-  if (response.statusCode == 200) {
-    final bytes = response.bodyBytes;
-    final dir = await getApplicationDocumentsDirectory();
-    final file = File("${dir.path}/certificate_${studentId}_$meetId.pdf");
-    await file.writeAsBytes(bytes);
-
-    print("✅ Certificate downloaded: ${file.path}");
-    OpenFile.open(file.path); // requires open_filex package
-  } else {
-    print("❌ Error: ${response.body}");
-  }
-}
+ 
 
 
   Future<void> fetchMeetings() async {
@@ -130,13 +115,16 @@ class _AlumnexTabMeetPageState extends State<AlumnexTabMeetPage> {
                     vertical: 12,
                   ),
                 ),
-                onPressed: () {
-                  Navigator.of(context).push(
+                onPressed: () async {
+                 final result = await Navigator.of(context).push(
                     MaterialPageRoute(
                       builder:
                           (context) => CreateMeetPage(hostId: widget.rollno),
                     ),
                   );
+                  if (result == true) {
+  fetchMeetings(); // refresh API call
+}
                 },
                 icon: const Icon(Icons.video_call),
                 label: const Text("Create Meet"),
@@ -147,8 +135,17 @@ class _AlumnexTabMeetPageState extends State<AlumnexTabMeetPage> {
                   color: primaryColor,
                   size: 28,
                 ),
-                onPressed: () {
-                  // TODO: handle notification click
+                onPressed: () async {
+                  final result = await Navigator.push(
+  context,
+  MaterialPageRoute(
+    builder: (context) => AlumnexMeetCertificatesPage(rollno : widget.rollno),
+  ),
+);
+
+if (result == true) {
+  fetchMeetings(); // refresh API call
+}
                 },
               ),
             ],
@@ -213,6 +210,7 @@ class _AlumnexTabMeetPageState extends State<AlumnexTabMeetPage> {
                           meeting['link'],
                           meeting['date'],
                           meeting['end_time'],
+                          meeting
                         );
                       },
                     ),
@@ -243,16 +241,19 @@ Future<void> launchURL(String link) async {
           size: 16,
           color: secondaryColor,
         ),
-        onTap: () {
-          Navigator.of(context).push(
-            MaterialPageRoute(
-              builder:
-                  (context) => AlumnexAddMeetMembersPage(
-                    rollno: widget.rollno,
-                    meetId: meetId,
-                  ),
-            ),
-          );
+        onTap: () async {
+          // When navigating to detail page
+final result = await Navigator.push(
+  context,
+  MaterialPageRoute(
+    builder: (context) => AlumnexAddMeetMembersPage(rollno: widget.rollno,meetId: meetId,),
+  ),
+);
+
+if (result == true) {
+  fetchMeetings(); // refresh API call
+}
+
         },
       ),
     );
@@ -265,6 +266,7 @@ Future<void> launchURL(String link) async {
     String link,
     String date,
     String endTime,
+    dynamic meetingData,
   ) {
     return Card(
       elevation: 2,
@@ -282,7 +284,36 @@ Future<void> launchURL(String link) async {
 
 // inside your onTap:
 onTap: () {
-  final now = DateTime.now();
+
+
+
+  showDialog(
+    context: context,
+    builder: (context) {
+      return AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        title: const Text("Meeting Details"),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: const [
+            Text("Title: poc discussion"),
+            Text("Description: Discuss about ideathon"),
+            Text("Date: 2025-08-18"),
+            Text("Start Time: 1:00 PM"),
+            Text("End Time: 2:00 PM"),
+            Text("Platform: Google Meet"),
+            Text("Host ID: 23CDR110"),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context); // close popup
+              
+              final now = DateTime.now();
 
   // Example values from your data
 
@@ -309,8 +340,23 @@ onTap: () {
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text("Meeting is over, cannot join now.")),
     );
-    getCertificate(meetId, widget.rollno);
+
   }
+            },
+            child: const Text("Join"),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context); // close popup
+              // TODO: Call Leave API here
+            },
+            child: const Text("Leave"),
+          ),
+        ],
+      );
+    },
+  );
+  
 },
 
       ),

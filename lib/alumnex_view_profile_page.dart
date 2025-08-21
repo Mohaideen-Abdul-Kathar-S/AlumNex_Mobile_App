@@ -32,6 +32,8 @@ class AlumnexViewProfilePage extends StatefulWidget {
 class _AlumnexViewProfilePageState extends State<AlumnexViewProfilePage> {
   File? _tempprofileImage; // 📸 Store selected image
   int conn = 0; // Default value
+      List<dynamic> connections = [];
+  bool isLoading = true;
 
   @override
   void initState() {
@@ -42,13 +44,44 @@ class _AlumnexViewProfilePageState extends State<AlumnexViewProfilePage> {
       });
     });
     fetchData(widget.temprollno);
+    fetchConnections();
+  }
+
+Future<void> fetchConnections() async {
+    final res = await http.get(
+      Uri.parse('$urI/get_connections/${widget.temprollno}'),
+    );
+
+    if (res.statusCode == 200) {
+      List ids = jsonDecode(res.body);
+      List<dynamic> tempUsers = [];
+
+      for (var id in ids) {
+        final userRes = await http.get(
+          Uri.parse('$urI/get_user/$id'),
+        );
+
+        if (userRes.statusCode == 200) {
+          final userData = jsonDecode(userRes.body);
+          tempUsers.add(userData);
+        }
+      }
+
+      setState(() {
+        connections = tempUsers;
+        isLoading = false;
+      });
+    } else {
+      setState(() {
+        isLoading = false;
+      });
+      print("Error fetching connections");
+    }
   }
 
   Future<int> fetchconn() async {
     final response = await http.get(
-      Uri.parse(
-        "$urI/check_connection/${widget.rollno}/${widget.temprollno}",
-      ),
+      Uri.parse("$urI/check_connection/${widget.rollno}/${widget.temprollno}"),
       headers: {"Content-Type": "application/json"},
     );
 
@@ -99,7 +132,21 @@ class _AlumnexViewProfilePageState extends State<AlumnexViewProfilePage> {
 
             child: ElevatedButton(
               onPressed: () async {
-                final res = await DataBaseConnection().Connect_with_frd(
+
+                
+
+                
+              },
+              child:
+                  conn == 1
+                      ? Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.remove, color: Colors.red),
+                          SizedBox(width: 5),
+                          GestureDetector(
+  onTap: () async {
+    final res = await DataBaseConnection().Connect_with_frd(
                   widget.rollno,
                   widget.temprollno,
                 );
@@ -109,31 +156,27 @@ class _AlumnexViewProfilePageState extends State<AlumnexViewProfilePage> {
                   );
                   setState(() {
                     conn = 1;
-                  }); 
+                  });
                 } else if (res == 2) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(content: Text("Connection breaked")),
                   );
                   setState(() {
                     conn = 0;
-                  }); 
+                  });
                 } else {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(content: Text("error in connection")),
                   );
                 }
-              },
-              child:
-                  conn == 1
-                      ? Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(Icons.remove, color: Colors.red),
-                          SizedBox(width: 5),
-                          Text(
-                            "Disconnect",
-                            style: TextStyle(color: Colors.red),
-                          ),
+  },
+  child: Text(
+    "Disconnect",
+    style: TextStyle(color: Colors.red),
+  ),
+)
+
+                          
                         ],
                       )
                       : Row(
@@ -141,10 +184,43 @@ class _AlumnexViewProfilePageState extends State<AlumnexViewProfilePage> {
                         children: [
                           Icon(Icons.add, color: Colors.green),
                           SizedBox(width: 5),
-                          Text(
+                          GestureDetector(
+                            onTap: () async {
+String sender =
+                        widget.rollno; 
+                    String receiver =
+                        widget.temprollno; // the profile being viewed
+
+                    String type = 'Chat_request';
+                    
+
+                    final response = await http.post(
+                      Uri.parse("$urI/sendRequest"),
+                      headers: {"Content-Type": "application/json"},
+                      body: jsonEncode({
+                        "from": sender,
+                        "to": receiver,
+                        "type": type,
+                      }),
+                    );
+
+                    if (response.statusCode == 200) {
+                      ScaffoldMessenger.of(
+                        context,
+                      ).showSnackBar(SnackBar(content: Text('Request sent')));
+                    } else {
+                      print(response.body);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Failed to send request')),
+                      );
+                    }
+                            },
+                            child : Text(
                             "Connect",
                             style: TextStyle(color: Colors.green),
                           ),
+                          )
+                          
                         ],
                       ),
             ),
@@ -159,24 +235,31 @@ class _AlumnexViewProfilePageState extends State<AlumnexViewProfilePage> {
               alignment: Alignment.centerLeft,
               child: IconButton(
                 onPressed: () {
-                  showDialog(
-                    context: context,
-                    builder:
-                        (context) => Align(
-                          alignment: Alignment.centerLeft,
-                          child: Material(
-                            child: Container(
-                              width: 300,
-                              height: MediaQuery.of(context).size.height,
-                              color: Colors.white,
-                              child: AlumnexViewSidesheetsPage(
-                                roll: widget.temproll,
-                                trollno: widget.temprollno,
+                  if (person?["fields"] != null) {
+                    showDialog(
+                      context: context,
+                      builder:
+                          (context) => Align(
+                            alignment: Alignment.centerLeft,
+                            child: Material(
+                              child: Container(
+                                width: 300,
+                                height: MediaQuery.of(context).size.height,
+                                color: Colors.white,
+                                child: AlumnexViewSidesheetsPage(
+                                  roll: widget.temproll,
+                                  trollno: widget.temprollno,
+                                ),
                               ),
                             ),
                           ),
-                        ),
-                  );
+                    );
+                  } else {
+                    // optional: show a snackbar if fields are null
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text("No profile data available")),
+                    );
+                  }
                 },
                 icon: Icon(Icons.menu),
               ),
@@ -219,16 +302,90 @@ class _AlumnexViewProfilePageState extends State<AlumnexViewProfilePage> {
               style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
             ),
             Text(
-              '${person['fields']['Program Branch']} (${person['fields']['Batch']})',
+              '${person?['fields']?['Program Branch'] ?? ""} ${person?['fields']?['Batch'] ?? ""}',
               style: TextStyle(fontSize: 18),
             ),
+            Container(
+  child: connections.isEmpty
+      ? const Center(child: Text("No connections Found"))
+      : Column(
+  crossAxisAlignment: CrossAxisAlignment.start,
+  children: [
+    const Padding(
+      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      child: Text(
+        "Connections",
+        style: TextStyle(
+          fontSize: 16,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+    ),
+    SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        children: connections.map<Widget>((user) {
+          final fields = user['fields'] ?? {};
+          final fullName =
+              (fields['Full Name'] != null && fields['Full Name'] != "Nill")
+                  ? fields['Full Name']
+                  : user['_id'];
+          final displayName = (fullName.length > 13)
+              ? fullName.substring(0, 8) + "..."
+              : fullName;
+
+          return Container(
+            width: 120,
+            margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+            child: Column(
+              children: [
+                GestureDetector(
+                  onTap: () {
+                    // Navigator.of(context).push(
+                    //   MaterialPageRoute(
+                    //     builder: (context) => AlumnexViewProfilePage(
+                    //       temprollno: user['_id'],
+                    //       temproll: user['roll'],
+                    //       rollno: widget.rollno,
+                    //       roll: widget.roll,
+                    //     ),
+                    //   ),
+                    // );
+                  },
+                  child: CircleAvatar(
+    radius: 30,
+    backgroundImage: NetworkImage(
+      "$urI/get-profile/$displayName",
+    ),
+    backgroundColor: Colors.white,
+  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  displayName,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                  ),
+                ),
+              ],
+            ),
+          );
+        }).toList(),
+      ),
+    ),
+  ],
+)
+
+),
             ListTile(
               leading: Icon(Icons.link),
               title: Text("Resume"),
               subtitle: Text("View my profile"),
               trailing: IconButton(
-                icon: Icon(Icons.keyboard_double_arrow_right, ), onPressed: () {  },
-                
+                icon: Icon(Icons.keyboard_double_arrow_right),
+                onPressed: () {},
               ),
               onTap: () {
                 Navigator.push(
@@ -322,9 +479,9 @@ class _AlumnexViewProfilePageState extends State<AlumnexViewProfilePage> {
             ],
             if (widget.temproll == 'Student') ...[
               Text(
-                "Mentored By : ${person['mentoredby']}, ${person["connections"]},${widget.rollno}",
-                style: TextStyle(fontSize: 18),
-              ),
+                        "Mentored By : ${person['mentoredby'] == "Nill" ? "No Alumni Mentored" : person['mentoredby']}",
+                        style: TextStyle(fontSize: 18),
+                      ),
             ],
           ],
         ),
@@ -364,7 +521,7 @@ class _AlumnexViewProfilePageState extends State<AlumnexViewProfilePage> {
                   heroTag: 'Request',
                   onPressed: () async {
                     String sender =
-                        widget.rollno; // assuming this is the current user's ID
+                        widget.rollno; 
                     String receiver =
                         widget.temprollno; // the profile being viewed
 

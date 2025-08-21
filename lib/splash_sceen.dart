@@ -1,6 +1,10 @@
 import 'dart:async';
+import 'package:alumnex/alumn_global.dart';
+import 'package:alumnex/alumnex_index_page.dart';
+
 import 'package:flutter/material.dart';
 import 'package:alumnex/alumnex_login_page.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -28,11 +32,27 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
     _controller.forward();
 
     // After 1 second, navigate to Login Page
-    Timer(const Duration(seconds: 3), () {
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (context) => const AlumnexLoginPage()),
-      );
-    });
+    Timer(const Duration(seconds: 3), () async {
+  SharedPreferences prefs = await SharedPreferences.getInstance();
+  userID = prefs.getString("userID") ?? "";
+  userRoll = prefs.getString("userRoll") ?? "";
+
+  if (userID.isEmpty && userRoll.isEmpty) {
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute(builder: (context) => const AlumnexLoginPage()),
+    );
+  } else {
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute(
+        builder: (context) => AlumnexIndexPage(
+          roll: userRoll,
+          rollno: userID,
+        ),
+      ),
+    );
+  }
+});
+
   }
 
   @override

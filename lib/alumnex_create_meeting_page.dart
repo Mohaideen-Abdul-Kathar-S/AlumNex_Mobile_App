@@ -4,6 +4,8 @@ import 'package:intl/intl.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
+import 'package:url_launcher/url_launcher.dart';
+
 
 class CreateMeetPage extends StatefulWidget {
   final String hostId;
@@ -30,6 +32,22 @@ class _CreateMeetPageState extends State<CreateMeetPage> {
   DateTime? _selectedDate;
   TimeOfDay? _startTime;
   TimeOfDay? _endTime;
+
+
+
+void openAuthorize() async {
+  final url = Uri.parse('http://10.149.248.153:5000/authorize');
+  
+  if (await canLaunchUrl(url)) {
+    await launchUrl(
+      url,
+      mode: LaunchMode.externalApplication, // opens in default browser
+    );
+  } else {
+    throw 'Could not launch $url';
+  }
+}
+
 
 // Inside _submitForm()
 Future<void> _submitForm() async {
@@ -59,6 +77,7 @@ Future<void> _submitForm() async {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text("Meet Created Successfully!")),
         );
+        Navigator.pop(context,true); // Go back to previous screen
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text("Error: ${response.body}")),
@@ -122,6 +141,52 @@ Future<void> _submitForm() async {
                 _buildPlatformSelector(),
                 const SizedBox(height: 12),
                 _buildTextField(_linkController, "Meeting Link"),
+                const SizedBox(height: 20),
+                Center(
+  child: ElevatedButton(
+    style: ElevatedButton.styleFrom(
+      backgroundColor: primaryColor,
+      padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 14),
+    ),
+    onPressed: () async {
+      try {
+        final response = await http.get(
+          Uri.parse('http://10.149.248.153:5000/create_gmeet'),
+        );
+
+        if (response.statusCode == 200) {
+          final data = jsonDecode(response.body);
+          final meetLink = data['meet_link'];
+
+          showDialog(
+            context: context,
+            builder: (_) => AlertDialog(
+              title: const Text("Google Meet Link"),
+              content: SelectableText(meetLink),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text("Close"),
+                ),
+              ],
+            ),
+          );
+        } else {
+          throw Exception('Failed to create Meet');
+        }
+      } catch (e) {
+        print(e);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Error generating link: $e")),
+        );
+      }
+    },
+    child: const Text(
+      "Generate Link",
+      style: TextStyle(fontSize: 16, color: Colors.white),
+    ),
+  ),
+),
                 const SizedBox(height: 20),
                 Center(
                   child: ElevatedButton(

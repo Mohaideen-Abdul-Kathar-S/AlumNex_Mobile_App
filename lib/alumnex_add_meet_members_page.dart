@@ -17,7 +17,7 @@ class AlumnexAddMeetMembersPage extends StatefulWidget {
     required this.meetId,
   });
 
-    static const base = 'http://10.149.248.153:5000';
+  static const base = 'http://10.149.248.153:5000';
 
   // ---- Upload template PDF ----
   static Future<Map<String, dynamic>> uploadTemplate(File pdfFile) async {
@@ -32,7 +32,10 @@ class AlumnexAddMeetMembersPage extends StatefulWidget {
   }
 
   // ---- Upload host signature ----
-  static Future<Map<String, dynamic>> uploadSignature(String hostId, File sigFile) async {
+  static Future<Map<String, dynamic>> uploadSignature(
+    String hostId,
+    File sigFile,
+  ) async {
     var request = http.MultipartRequest("POST", Uri.parse("$urI/signature"));
     request.fields["host_id"] = hostId;
     request.files.add(await http.MultipartFile.fromPath("file", sigFile.path));
@@ -45,7 +48,9 @@ class AlumnexAddMeetMembersPage extends StatefulWidget {
   }
 
   // ---- Distribute certificates ----
-  static Future<Map<String, dynamic>> distributeCertificates(String meetId) async {
+  static Future<Map<String, dynamic>> distributeCertificates(
+    String meetId,
+  ) async {
     final res = await http.post(
       Uri.parse('$urI/distribute_certificates'),
       headers: {'Content-Type': 'application/json'},
@@ -74,42 +79,52 @@ class _AlumnexAddMeetMembersPageState extends State<AlumnexAddMeetMembersPage> {
     super.initState();
     fetchMeetingDetails();
   }
+
   File? templateFile;
-File? signatureFile;
+  File? signatureFile;
 
-Future<void> pickTemplate() async {
-  FilePickerResult? result = await FilePicker.platform.pickFiles(type: FileType.custom, allowedExtensions: ["pdf"]);
-  if (result != null) {
-    setState(() {
-      templateFile = File(result.files.single.path!);
-    });
+  Future<void> pickTemplate() async {
+    FilePickerResult? result = await FilePicker.platform.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: ["pdf"],
+    );
+    if (result != null) {
+      setState(() {
+        templateFile = File(result.files.single.path!);
+      });
+    }
   }
-}
 
-Future<void> pickSignature() async {
-  FilePickerResult? result = await FilePicker.platform.pickFiles(type: FileType.image);
-  if (result != null) {
-    setState(() {
-      signatureFile = File(result.files.single.path!);
-    });
+  Future<void> pickSignature() async {
+    FilePickerResult? result = await FilePicker.platform.pickFiles(
+      type: FileType.image,
+    );
+    if (result != null) {
+      setState(() {
+        signatureFile = File(result.files.single.path!);
+      });
+    }
   }
-}
 
   Future<void> generateAllCertificates(
-    String meetId, String hostId, File templateFile, File signatureFile) async {
-  
-  // 1. Upload template (only once per app unless changed)
-  await AlumnexAddMeetMembersPage.uploadTemplate(templateFile);
+    String meetId,
+    String hostId,
+    File templateFile,
+    File signatureFile,
+  ) async {
+    // 1. Upload template (only once per app unless changed)
+    await AlumnexAddMeetMembersPage.uploadTemplate(templateFile);
 
-  // 2. Upload host signature (per alumni/host)
-  await AlumnexAddMeetMembersPage.uploadSignature(hostId, signatureFile);
+    // 2. Upload host signature (per alumni/host)
+    await AlumnexAddMeetMembersPage.uploadSignature(hostId, signatureFile);
 
-  // 3. Now distribute certificates for all members in the meeting
-  final result = await AlumnexAddMeetMembersPage.distributeCertificates(meetId);
+    // 3. Now distribute certificates for all members in the meeting
+    final result = await AlumnexAddMeetMembersPage.distributeCertificates(
+      meetId,
+    );
 
-  print("Certificates generated: ${result['generated_count']}");
-}
-
+    print("Certificates generated: ${result['generated_count']}");
+  }
 
   Future<void> fetchMeetingDetails() async {
     final response = await http.get(
@@ -140,9 +155,7 @@ Future<void> pickSignature() async {
 
   Future<void> addMember(String studentRoll) async {
     final response = await http.post(
-      Uri.parse(
-        '$urI/meeting/${widget.meetId}/add_member',
-      ),
+      Uri.parse('$urI/meeting/${widget.meetId}/add_member'),
       headers: {'Content-Type': 'application/json'},
       body: json.encode({'rollno': studentRoll}),
     );
@@ -157,13 +170,9 @@ Future<void> pickSignature() async {
     }
   }
 
- 
-
   Future<void> addGroupMembers(String groupType) async {
     final response = await http.post(
-      Uri.parse(
-        '$urI/meeting/${widget.meetId}/add_group',
-      ),
+      Uri.parse('$urI/meeting/${widget.meetId}/add_group'),
       headers: {'Content-Type': 'application/json'},
       body: json.encode({'group': groupType}),
     );
@@ -178,15 +187,32 @@ Future<void> pickSignature() async {
     }
   }
 
+  Future<void> _removeMember(String meetingId, String memberId) async {
+    final response = await http.delete(
+      Uri.parse('$urI/remove_member/$meetingId/$memberId'),
+    );
+
+    if (response.statusCode == 200) {
+      setState(() {
+        meetingData!['members'].remove(memberId);
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Member removed successfully")),
+      );
+    } else {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("Failed to remove member")));
+    }
+  }
+
   Future<void> searchUsers(String query) async {
     if (query.isEmpty) {
       setState(() => _searchResults = []);
       return;
     }
 
-    final res = await http.get(
-      Uri.parse('$urI/search_users?q=$query'),
-    );
+    final res = await http.get(Uri.parse('$urI/search_users?q=$query'));
 
     if (res.statusCode == 200) {
       final data = jsonDecode(res.body);
@@ -294,7 +320,6 @@ Future<void> pickSignature() async {
                             onPressed: () {
                               _addMemberToMeeting(student['_id']);
                               setState(() {
-                                
                                 fetchMeetingDetails();
                               });
                             },
@@ -380,6 +405,45 @@ Future<void> pickSignature() async {
                           ),
                           const SizedBox(width: 4),
                           Text("Host ID: ${meetingData!['host_id']}"),
+                          const SizedBox(width: 10),
+                          ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color.fromARGB(
+                                255,
+                                238,
+                                147,
+                                140,
+                              ),
+                            ),
+                            onPressed: () async {
+                              final response = await http.delete(
+                                Uri.parse(
+                                  '$urI/delete_meeting/${meetingData!['_id']}',
+                                ),
+                              );
+
+                              if (response.statusCode == 200) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text(
+                                      "Meeting deleted successfully",
+                                    ),
+                                  ),
+                                );
+                                Navigator.pop(
+                                  context,
+                                  true,
+                                ); // send back a signal
+                              } else {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text("Failed to delete meeting"),
+                                  ),
+                                );
+                              }
+                            },
+                            child: const Text("Delete Meet"),
+                          ),
                         ],
                       ),
                       const SizedBox(height: 16),
@@ -401,14 +465,33 @@ Future<void> pickSignature() async {
                             children: List.generate(
                               meetingData!['members'].length,
                               (index) {
+                                final member = meetingData!['members'][index];
                                 return Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
                                   children: [
-                                    const Icon(
-                                      Icons.check_circle_outline,
-                                      color: Colors.green,
+                                    Row(
+                                      children: [
+                                        const Icon(
+                                          Icons.check_circle_outline,
+                                          color: Colors.green,
+                                        ),
+                                        const SizedBox(width: 6),
+                                        Text(member),
+                                      ],
                                     ),
-                                    const SizedBox(width: 6),
-                                    Text(meetingData!['members'][index]),
+                                    IconButton(
+                                      icon: const Icon(
+                                        Icons.remove_circle,
+                                        color: Colors.red,
+                                      ),
+                                      onPressed: () async {
+                                        await _removeMember(
+                                          meetingData!['_id'],
+                                          member,
+                                        );
+                                      },
+                                    ),
                                   ],
                                 );
                               },
@@ -423,49 +506,85 @@ Future<void> pickSignature() async {
                       // 🔍 Search and Add Member
 
                       // 👥 Add Group/Community Members
-                      const Text(
-                        "Add by Group",
-                        style: TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                      Wrap(
-                        spacing: 10,
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          ElevatedButton(
-                            onPressed: () => addGroupMembers("community"),
-                            child: const Text("Add Community Members"),
+                          // Add Members Section
+                          const Text(
+                            "Add Members",
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                            ),
                           ),
-                          ElevatedButton(
-                            onPressed: () => addGroupMembers("mentoring"),
-                            child: const Text("Add Mentoring Members"),
+                          const SizedBox(height: 8),
+                          Wrap(
+                            spacing: 10,
+                            runSpacing: 10,
+                            children: [
+                              ElevatedButton(
+                                onPressed: () => addGroupMembers("community"),
+                                child: const Text("Add Community Members"),
+                              ),
+                              ElevatedButton(
+                                onPressed: () => addGroupMembers("mentoring"),
+                                child: const Text("Add Mentoring Members"),
+                              ),
+                              ElevatedButton(
+                                onPressed: () => addGroupMembers("connection"),
+                                child: const Text("Add Connection Members"),
+                              ),
+                            ],
                           ),
-                          ElevatedButton(
-                            onPressed: () => addGroupMembers("connection"),
-                            child: const Text("Add Connection Members"),
+
+                          const SizedBox(
+                            height: 20,
+                          ), // spacing between sections
+                          // Certification Section
+                          const Text(
+                            "Certification",
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                            ),
                           ),
-                          Column(
-  children: [
-    ElevatedButton(
-      onPressed: pickTemplate,
-      child: const Text("Pick Certificate Template"),
-    ),
-    ElevatedButton(
-      onPressed: pickSignature,
-      child: const Text("Pick Signature"),
-    ),
-    ElevatedButton(
-      onPressed: () async {
-        if (templateFile != null && signatureFile != null) {
-          await generateAllCertificates(meetingData!['_id'],meetingData!['host_id'], templateFile!, signatureFile!);
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text("Please pick both template and signature")),
-          );
-        }
-      },
-      child: const Text("Generate All Certificates"),
-    ),
-  ],
-),
+                          const SizedBox(height: 8),
+                          Wrap(
+                            spacing: 10,
+                            runSpacing: 10,
+                            children: [
+                              ElevatedButton(
+                                onPressed: pickTemplate,
+                                child: const Text("Pick Certificate Template"),
+                              ),
+                              ElevatedButton(
+                                onPressed: pickSignature,
+                                child: const Text("Pick Signature"),
+                              ),
+                              ElevatedButton(
+                                onPressed: () async {
+                                  if (templateFile != null &&
+                                      signatureFile != null) {
+                                    await generateAllCertificates(
+                                      meetingData!['_id'],
+                                      meetingData!['host_id'],
+                                      templateFile!,
+                                      signatureFile!,
+                                    );
+                                  } else {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                        content: Text(
+                                          "Please pick both template and signature",
+                                        ),
+                                      ),
+                                    );
+                                  }
+                                },
+                                child: const Text("Generate All Certificates"),
+                              ),
+                            ],
+                          ),
                         ],
                       ),
                     ],

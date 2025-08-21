@@ -2,13 +2,18 @@ import 'dart:convert';
 
 import 'package:alumnex/alumn_global.dart';
 import 'package:alumnex/alumnex_database_connection_page.dart';
+import 'package:alumnex/alumnex_individual_chat_screen.dart';
+import 'package:alumnex/alumnex_postdetails_page.dart';
+import 'package:alumnex/alumnex_view_profile_page.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
 class AlumnexInsideCollegePage extends StatefulWidget {
-  final dynamic rollno;
+  final String rollno;
+  
+  final String roll;
 
-  const AlumnexInsideCollegePage({super.key, required this.rollno});
+  const AlumnexInsideCollegePage({super.key, required this.rollno,required this.roll});
 
   @override
   State<AlumnexInsideCollegePage> createState() =>
@@ -18,12 +23,67 @@ class AlumnexInsideCollegePage extends StatefulWidget {
 class _AlumnexInsideCollegePageState extends State<AlumnexInsideCollegePage> {
   late final rollno;
   late Future<List<dynamic>> _postsFuture;
+      List<dynamic> connections = [];
+
+  ScrollController _scrollController = ScrollController();
+    List<String> likedPosts = [];
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
     rollno = widget.rollno;
     _postsFuture = fetchPosts();
+     fetchSavedPosts(rollno);
+  }
+
+
+ void _sendMessages(String postid, String reciever) async {
+    final text = widget.rollno + " sent post for you -> " + postid;
+    if (text.isEmpty) return;
+
+    final message = {
+      'sender': widget.rollno,
+      'receiver': reciever,
+      'text': text,
+    };
+
+    final response = await http.post(
+      Uri.parse('$urI/send_message'),
+      headers: {'Content-Type': 'application/json'},
+      body: json.encode(message),
+    );
+
+    if (response.statusCode == 200) {
+      Future.delayed(Duration(milliseconds: 100), () {
+        _scrollController.animateTo(
+          _scrollController.position.maxScrollExtent,
+          duration: Duration(milliseconds: 300),
+          curve: Curves.easeOut,
+        );
+      });
+    }
+  }
+
+
+    Future<void> fetchSavedPosts(String rollno) async {
+    print("getSavedPosts called with rollno: $rollno");
+    final response = await http.get(
+      Uri.parse('$urI/getSavedPosts/$rollno'),
+    );
+
+    if (response.statusCode == 200) {
+      print(response.body);
+      final List<dynamic> decoded = jsonDecode(response.body);
+
+    // Convert dynamic list to List<String>
+    setState(() {
+      likedPosts = decoded.map((e) => e.toString()).toList();
+    });
+
+      print("Saved Posts: $likedPosts");
+    } else {
+      throw Exception('Failed to load Saved Posts');
+    }
   }
 
   Future<List<dynamic>> fetchPosts() async {
@@ -116,11 +176,24 @@ class _AlumnexInsideCollegePageState extends State<AlumnexInsideCollegePage> {
 
                               SizedBox(width: 10),
                               Expanded(
-                                child: Column(
+                                  child: GestureDetector(
+    onTap: () {
+        Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => AlumnexPostdetailsPage(
+            rollno: userID,  // or pass rollnoCont.text
+            roll: userRoll,  // or dropdownValue
+            post: post,
+          ),
+        ),
+      );
+    },
+    child : Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
-                                      post['title'] ?? 'Unknown',
+                                      post['rollno'] ?? 'Unknown',
                                       style: TextStyle(
                                         fontSize: 18,
                                         fontWeight: FontWeight.bold,
@@ -128,7 +201,7 @@ class _AlumnexInsideCollegePageState extends State<AlumnexInsideCollegePage> {
                                       ),
                                     ),
                                     Text(
-                                      post['content'] ?? '',
+                                      post['title'] ?? '',
                                       style: TextStyle(
                                         fontSize: 14,
                                         color: Colors.grey,
@@ -137,12 +210,26 @@ class _AlumnexInsideCollegePageState extends State<AlumnexInsideCollegePage> {
                                   ],
                                 ),
                               ),
-                              IconButton(
-                                onPressed: () {},
-                                icon: Icon(Icons.keyboard_double_arrow_right),
                               ),
+                              IconButton(
+                                  onPressed: () {
+                                    Navigator.of(context).push(
+                                      MaterialPageRoute(
+                                        builder:
+                                            (context) => AlumnexViewProfilePage(
+                                              temprollno: post['rollno'],
+                                              temproll: post['roll'],
+                                              rollno: rollno,
+                                              roll: widget.roll,
+                                            ),
+                                      ),
+                                    );
+                                  },
+                                  icon: Icon(Icons.keyboard_double_arrow_right),
+                                ),
                             ],
                           ),
+                          
                           SizedBox(height: 15),
                           ClipRRect(
                             borderRadius: BorderRadius.circular(20),
@@ -173,91 +260,368 @@ class _AlumnexInsideCollegePageState extends State<AlumnexInsideCollegePage> {
                           ),
                           SizedBox(height: 10),
                           Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceAround,
-                            children: [
-                              Column(
-                                children: [
-                                  FutureBuilder<int>(
-                                    future: DataBaseConnection()
-                                        .getUserLikeState(
-                                          post['_id'].toString(),
-                                          rollno,
-                                        ),
-                                    builder: (context, snapshot) {
-                                      if (!snapshot.hasData) {
-                                        return Icon(
-                                          Icons.thumb_up_alt_outlined,
+                              mainAxisAlignment: MainAxisAlignment.spaceAround,
+                              children: [
+                                Column(
+                                  children: [
+                                    FutureBuilder<int>(
+                                      future: DataBaseConnection()
+                                          .getUserLikeState(
+                                            post['_id'].toString(),
+                                            rollno,
+                                          ),
+                                      builder: (context, snapshot) {
+                                        if (!snapshot.hasData) {
+                                          return Icon(
+                                            Icons.thumb_up_alt_outlined,
+                                          );
+                                        }
+                                        int likeState = snapshot.data!;
+
+                                        return IconButton(
+                                          icon: Icon(
+                                            likeState == 1
+                                                ? Icons.thumb_up
+                                                : Icons.thumb_up_alt_outlined,
+                                          ),
+                                          onPressed: () async {
+                                            dynamic data = {
+                                              '_id': post['_id'],
+                                              'rollno': rollno,
+                                            };
+                                            await DataBaseConnection()
+                                                .update_likes(data);
+                                            // Call setState to refresh FutureBuilder after like toggling
+                                            setState(() {
+                                              //likeState = likeState == 1 ? 0 : 1;
+                                            });
+                                          },
                                         );
-                                      }
-                                      int likeState = snapshot.data!;
+                                      },
+                                    ),
+                                    FutureBuilder<List<int>>(
+                                      future: DataBaseConnection().getLikes(
+                                        post['_id'].toString(),
+                                      ),
+                                      builder: (context, snapshot) {
+                                        if (snapshot.connectionState ==
+                                            ConnectionState.waiting) {
+                                          return Text("...");
+                                        } else if (snapshot.hasError) {
+                                          return Text("Error");
+                                        } else {
+                                          return Text(
+                                            '${snapshot.data?[0]} Likes',
+                                          );
+                                        }
+                                      },
+                                    ),
+                                  ],
+                                ),
 
-                                      return IconButton(
-                                        icon: Icon(
-                                          likeState == 1
-                                              ? Icons.thumb_up
-                                              : Icons.thumb_up_alt_outlined,
-                                        ),
-                                        onPressed: () async {
-                                          dynamic data = {
-                                            '_id': post['_id'],
-                                            'rollno': rollno,
-                                          };
-                                          await DataBaseConnection()
-                                              .update_likes(data);
-                                          // Call setState to refresh FutureBuilder after like toggling
+                                Column(
+                                  children: [
+                                    IconButton(
+                                      onPressed: () async {
+                                        Map<String, dynamic> comments =
+                                            await fetchComments(post['_id']);
+                                        print(comments);
+
+                                        TextEditingController
+                                        _commentController =
+                                            TextEditingController();
+
+                                        showModalBottomSheet(
+                                          context: context,
+                                          isScrollControlled: true,
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.vertical(
+                                              top: Radius.circular(20),
+                                            ),
+                                          ),
+                                          builder: (context) {
+                                            return Padding(
+                                              padding: EdgeInsets.only(
+                                                bottom:
+                                                    MediaQuery.of(
+                                                      context,
+                                                    ).viewInsets.bottom,
+                                                left: 16,
+                                                right: 16,
+                                                top: 10,
+                                              ),
+                                              child: Column(
+                                                mainAxisSize: MainAxisSize.min,
+                                                children: [
+                                                  Text(
+                                                    "Comments",
+                                                    style: TextStyle(
+                                                      fontWeight:
+                                                          FontWeight.bold,
+                                                    ),
+                                                  ),
+                                                  SizedBox(height: 10),
+
+                                                  // 🧠 COMMENT LIST (IF AVAILABLE)
+                                                  if (comments.isNotEmpty)
+                                                    ...comments.entries.map(
+                                                      (entry) => ListTile(
+                                                        leading: CircleAvatar(
+                                                          child: Text(
+                                                            entry.key[0],
+                                                          ),
+                                                        ),
+                                                        title: Text(entry.key),
+                                                        subtitle: Text(
+                                                          entry.value,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  if (comments.isEmpty)
+                                                    Padding(
+                                                      padding:
+                                                          const EdgeInsets.all(
+                                                            8.0,
+                                                          ),
+                                                      child: Text(
+                                                        "No comments yet.",
+                                                      ),
+                                                    ),
+
+                                                  Divider(),
+
+                                                  // COMMENT INPUT
+                                                  Row(
+                                                    children: [
+                                                      Expanded(
+                                                        child: TextField(
+                                                          controller:
+                                                              _commentController,
+                                                          decoration: InputDecoration(
+                                                            hintText:
+                                                                'Add a comment...',
+                                                            border:
+                                                                OutlineInputBorder(),
+                                                            contentPadding:
+                                                                EdgeInsets.symmetric(
+                                                                  horizontal:
+                                                                      10,
+                                                                ),
+                                                          ),
+                                                        ),
+                                                      ),
+                                                      IconButton(
+                                                        icon: Icon(Icons.send),
+                                                        onPressed: () {
+                                                          String comment =
+                                                              _commentController
+                                                                  .text
+                                                                  .trim();
+                                                          if (comment
+                                                              .isNotEmpty) {
+                                                            submitComment(
+                                                              post['_id'],
+                                                              rollno,
+                                                              comment,
+                                                            );
+                                                            Navigator.pop(
+                                                              context,
+                                                            ); // Close and refresh later
+                                                          }
+                                                        },
+                                                      ),
+                                                    ],
+                                                  ),
+                                                  SizedBox(height: 10),
+                                                ],
+                                              ),
+                                            );
+                                          },
+                                        );
+                                      },
+
+                                      icon: Icon(Icons.comment),
+                                    ),
+                                    FutureBuilder<List<int>>(
+                                      future: DataBaseConnection().getLikes(
+                                        post['_id'].toString(),
+                                      ),
+                                      builder: (context, snapshot) {
+                                        if (snapshot.connectionState ==
+                                            ConnectionState.waiting) {
+                                          return Text("...");
+                                        } else if (snapshot.hasError) {
+                                          return Text("Error");
+                                        } else {
+                                          return Text(
+                                            '${snapshot.data?[1]} Commands',
+                                          );
+                                        }
+                                      },
+                                    ),
+                                  ],
+                                ),
+                                Column(
+                                  children: [
+                                    IconButton(
+                                      icon: Icon(Icons.share),
+                                      onPressed: () {
+                                        showModalBottomSheet(
+                                          context: context,
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.vertical(
+                                              top: Radius.circular(20),
+                                            ),
+                                          ),
+                                          builder: (context) {
+                                            return Padding(
+                                              padding: const EdgeInsets.all(
+                                                16.0,
+                                              ),
+                                              child: Column(
+                                                mainAxisSize: MainAxisSize.min,
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
+                                                children: [
+                                                  Text(
+                                                    "Share Post",
+                                                    style: TextStyle(
+                                                      fontSize: 18,
+                                                      fontWeight:
+                                                          FontWeight.bold,
+                                                    ),
+                                                  ),
+                                                  SizedBox(height: 10),
+
+                                                  // List of connections
+                                                  connections.isNotEmpty
+                                                      ? ListView.builder(
+                                                        shrinkWrap:
+                                                            true, // Important for bottom sheet
+                                                        physics:
+                                                            NeverScrollableScrollPhysics(),
+                                                        itemCount:
+                                                            connections.length,
+                                                        itemBuilder: (
+                                                          context,
+                                                          index,
+                                                        ) {
+                                                          final user =
+                                                              connections[index];
+                                                          return ListTile(
+                                                            leading: CircleAvatar(
+                                                              backgroundImage:
+                                                                  user['profile'] !=
+                                                                          null
+                                                                      ? NetworkImage(
+                                                                        user['profile'],
+                                                                      )
+                                                                      : AssetImage(
+                                                                            'assets/default_profile.png',
+                                                                          )
+                                                                          as ImageProvider,
+                                                            ),
+                                                            title: Text(
+                                                              user['_id'] ??
+                                                                  'Unknown User',
+                                                            ),
+                                                            subtitle: Text(
+                                                              user['roll'] ??
+                                                                  '',
+                                                            ),
+                                                            trailing: IconButton(
+                                                              icon: Icon(
+                                                                Icons.send,
+                                                                color:
+                                                                    Colors.blue,
+                                                              ),
+                                                              onPressed: () {
+                                                                Navigator.pop(
+                                                                  context,
+                                                                );
+                                                                _sendMessages(
+                                                                  post['_id'], // Pass post ID
+                                                                  user['_id'], // Pass user ID
+                                                                );
+                                                              },
+                                                            ),
+                                                          );
+                                                        },
+                                                      )
+                                                      : Center(
+                                                        child: Padding(
+                                                          padding:
+                                                              const EdgeInsets.all(
+                                                                8.0,
+                                                              ),
+                                                          child: Text(
+                                                            "No connections found",
+                                                          ),
+                                                        ),
+                                                      ),
+                                                ],
+                                              ),
+                                            );
+                                          },
+                                        );
+                                      },
+                                    ),
+                                    Text('Share'),
+                                  ],
+                                ),
+                                Column(
+                                  children: [
+                                    IconButton(
+                                      icon: Icon(
+                                        likedPosts.contains(post['_id'])
+                                            ? Icons.bookmark
+                                            : Icons.bookmark_border,
+                                        color:
+                                            likedPosts.contains(post['_id'])
+                                                ? Colors.blue
+                                                : Colors.grey,
+                                      ),
+                                      onPressed: () async {
+                                        final postId = post['_id'];
+                                        final userId =
+                                            rollno; // use your logged-in user's rollno
+                                        print(
+                                          "Toggling save for post: $postId by user: $userId",
+                                        );
+                                        final response = await http.get(
+                                          Uri.parse(
+                                            '$urI/saveposts/$userId/$postId',
+                                          ),
+                                        );
+
+                                        if (response.statusCode == 200) {
+                                          print(likedPosts);
                                           setState(() {
-                                            //likeState = likeState == 1 ? 0 : 1;
+                                            if (likedPosts.contains(postId)) {
+                                              likedPosts.remove(
+                                                postId,
+                                              ); // toggle locally
+                                            } else {
+                                              likedPosts.add(postId);
+                                            }
                                           });
-                                        },
-                                      );
-                                    },
-                                  ),
-                                  FutureBuilder<List<int>>(
-                                      future: DataBaseConnection().getLikes(
-                                        post['_id'].toString(),
-                                      ),
-                                      builder: (context, snapshot) {
-                                        if (snapshot.connectionState ==
-                                            ConnectionState.waiting) {
-                                          return Text("...");
-                                        } else if (snapshot.hasError) {
-                                          return Text("Error");
+                                          print(likedPosts);
                                         } else {
-                                          return Text('${snapshot.data?[0]} Likes');
+                                          print(
+                                            "Error saving post: ${response.body}",
+                                          );
                                         }
                                       },
                                     ),
-                                ],
-                              ),
-
-                              Column(
-                                children: [
-                                  Icon(Icons.comment),
-                                  FutureBuilder<List<int>>(
-                                      future: DataBaseConnection().getLikes(
-                                        post['_id'].toString(),
-                                      ),
-                                      builder: (context, snapshot) {
-                                        if (snapshot.connectionState ==
-                                            ConnectionState.waiting) {
-                                          return Text("...");
-                                        } else if (snapshot.hasError) {
-                                          return Text("Error");
-                                        } else {
-                                          return Text('${snapshot.data?[1]} Commands');
-                                        }
-                                      },
+                                    Text(
+                                      likedPosts.contains(post['_id'])
+                                          ? "Saved"
+                                          : "Save",
                                     ),
-                                ],
-                              ),
-                              Column(
-                                children: [Icon(Icons.share), Text('Share')],
-                              ),
-                              Column(
-                                children: [Icon(Icons.bookmark), Text('Save')],
-                              ),
-                            ],
-                          ),
+                                  ],
+                                ),
+                              ],
+                            ),
                         ],
                       ),
                     ),

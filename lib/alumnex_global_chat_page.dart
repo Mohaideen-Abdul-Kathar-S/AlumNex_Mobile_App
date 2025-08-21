@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
 class AlumnexGlobalChatPage extends StatefulWidget {
-  final dynamic rollno;
+  final String rollno;
 
   const AlumnexGlobalChatPage({super.key,required this.rollno});
 
@@ -49,6 +49,7 @@ class _AlumnexGlobalChatPageState extends State<AlumnexGlobalChatPage> {
       "${widget.rollno}_post_${DateTime.now().millisecondsSinceEpoch}";
 
     final postData = {
+      'rollno': widget.rollno,
       'postId':postId,
       'type': postType,
       'title': title,

@@ -1,9 +1,12 @@
 import 'package:alumnex/alumnex_database_connection_page.dart';
 import 'package:alumnex/alumnex_login_page.dart';
 import 'package:flutter/material.dart';
+import 'alumnex_idcard_reg_page.dart';
 
 class AlumnexRegPage extends StatefulWidget {
-  const AlumnexRegPage({super.key});
+  final Map<String, dynamic>? prefilledData; // ✅ add this
+
+  const AlumnexRegPage({super.key, this.prefilledData});
 
   @override
   State<AlumnexRegPage> createState() => _AlumnexRegPageState();
@@ -18,6 +21,31 @@ class _AlumnexRegPageState extends State<AlumnexRegPage> {
   final TextEditingController emailCont = TextEditingController();
   final TextEditingController passwordCont = TextEditingController();
   final TextEditingController conPasswordCont = TextEditingController();
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    rollnoCont.text = widget.prefilledData?['Student Roll No'] ?? "";
+    
+    determineRole();
+  }
+// default
+
+void determineRole() {
+  selectedRole = isAlumniRole() ? "Alumni" : "Student";
+}
+
+bool isAlumniRole() {
+  String batch = widget.prefilledData?['Student Batch'] ?? "";
+  List<String> years = batch.split(" - ");
+  int? endYear = years.length > 1 ? int.tryParse(years[1]) : null;
+
+  int currentYear = DateTime.now().year;
+
+  // Alumni if batch already passed out
+  return endYear != null && endYear < currentYear;
+}
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -109,8 +137,8 @@ class _AlumnexRegPageState extends State<AlumnexRegPage> {
                     children: [
                       ElevatedButton(
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.white,
-                          foregroundColor: Color(0xFF004D52),
+                          backgroundColor: secondaryColor,
+                          foregroundColor: Color.fromARGB(255, 255, 255, 255),
                           elevation: 5,
                           padding: const EdgeInsets.symmetric(
                             horizontal: 24,
@@ -147,40 +175,98 @@ class _AlumnexRegPageState extends State<AlumnexRegPage> {
                           ),
                         ),
                         onPressed: () async {
+                          print(
+                            "ID card data" + widget.prefilledData.toString(),
+                          );
                           if (passwordCont.text == conPasswordCont.text) {
-                            dynamic data = {
-  "roll" : selectedRole,
-  "_id": rollnoCont.text,
-  "password": passwordCont.text,
-  "profile": "Path",
-  "name": "Nill",
-  "Gender": "Nill",
-  "email": emailCont.text,
-  "phoneno": "Nill",
-  "location": "Nill",
-  "programbranch": "Nill",
-  "Batch": "Nill",
-  "preferredroll": "Nill",
-  "Higherstudies": "Nill",
-  "Dreamcompany": "Nill",
-  "TechSkills": "Nill",
-  "certificaion": "Nill",
-  "projects": "Nill",
-  "clubs": "Nill",
-  "mentoredby":"Nill",
-  "domain":"Nill",
-  "currentjob": "Nill",
-  "company": "Nill",
-  "yoe": "Nill",
-  "workedin": "Nill",
-  "mentoring":[],
-};
-                            String res = await DataBaseConnection().RegistrationPage(data);
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text( res ),
-                              ),
-                            );
+                            if (rollnoCont.text ==
+                                    widget.prefilledData?['Student Roll No'] &&
+                                ("KONGU ENGINEERING COLLEGE" ==
+                                        widget.prefilledData?['College Name'] ||
+                                    "Kongu Engineering College" ==
+                                        widget
+                                            .prefilledData?['College Name'])) {
+                              // Parse "2023 - 2027"
+                              String batch =
+                                  widget.prefilledData?['Student Batch'] ?? "";
+                              List<String> years = batch.split(" - ");
+                              int? endYear =
+                                  years.length > 1
+                                      ? int.tryParse(years[1])
+                                      : null;
+
+                              // Current year
+                              int currentYear = DateTime.now().year;
+
+                              // Validation: Alumni means batch already passed out
+                              bool isAlumni =
+                                  endYear != null && endYear < currentYear;
+                                  
+                              dynamic data = {
+                                "roll": isAlumni ? "Alumni" : "Student",
+                                "_id": rollnoCont.text,
+                                "password": passwordCont.text,
+                                "profile": "Path",
+                                "name":
+                                    widget.prefilledData?['Student Name'] ??
+                                    "Nill",
+                                "Gender": "Nill",
+                                "email": emailCont.text,
+                                "phoneno": "Nill",
+                                "location": "Nill",
+                                "programbranch": "Nill",
+                                "Batch":
+                                    widget.prefilledData?['Student Batch'] ??
+                                    "Nill",
+                                "preferredroll": "Nill",
+                                "Higherstudies": "Nill",
+                                "Dreamcompany": "Nill",
+                                "TechSkills": "Nill",
+                                "certificaion": "Nill",
+                                "projects": "Nill",
+                                "clubs": "Nill",
+                                "mentoredby": "Nill",
+                                "domain": "Nill",
+                                "currentjob": "Nill",
+                                "company": "Nill",
+                                "yoe": "Nill",
+                                "workedin": "Nill",
+                                "mentoring": [],
+                              };
+
+                              String res = await DataBaseConnection()
+                                  .RegistrationPage(data);
+                              ScaffoldMessenger.of(
+                                context,
+                              ).showSnackBar(SnackBar(content: Text(res)));
+
+                              Navigator.pushReplacement(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => AlumnexLoginPage(),
+                                ),
+                              );
+                            } else {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text(
+                                    "Roll number or College Name is Invalid",
+                                  ),
+                                ),
+                              );
+                              if (widget.prefilledData?['Student Roll No'] ==
+                                      null ||
+                                  widget.prefilledData?['College Name']==null ||
+                                  widget.prefilledData?['Student Batch'] ==
+                                      null) {
+                                Navigator.pushReplacement(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => AlumnexIdCardPage(),
+                                  ),
+                                );
+                              }
+                            }
                           } else {
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(
@@ -188,16 +274,15 @@ class _AlumnexRegPageState extends State<AlumnexRegPage> {
                               ),
                             );
                           }
-                          Navigator.pushReplacement(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => AlumnexLoginPage(),
-                            ),
-                          );
                         },
-                        child: const Text(
-                          "Register",
-                          style: TextStyle(fontSize: 16),
+                        child: Text(
+                          (widget.prefilledData?['Student Roll No'] == null ||
+                                  widget.prefilledData?['College Name']==null ||
+                                  widget.prefilledData?['Student Batch'] ==
+                                      null)
+                              ? "Upload ID Card"
+                              : "Register",
+                          style: const TextStyle(fontSize: 16),
                         ),
                       ),
                     ],

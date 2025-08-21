@@ -111,6 +111,7 @@ void _uploadPost() async {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text('Post Uploaded Successfully!')),
     );
+    Navigator.pop(context); // Close the upload page
   } else {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text('Post Upload Failed')),
@@ -236,6 +237,7 @@ void _uploadPost() async {
               
             ],
             const SizedBox(height: 20),
+            Text("Upload Image (optional)"),
               IconButton(
                 icon: Icon(Icons.edit, color: Colors.orange),
                 onPressed: _pickImage,

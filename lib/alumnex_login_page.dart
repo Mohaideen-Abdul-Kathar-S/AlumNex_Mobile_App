@@ -1,7 +1,10 @@
+import 'package:alumnex/alumn_global.dart';
 import 'package:alumnex/alumnex_database_connection_page.dart';
+import 'package:alumnex/alumnex_idcard_reg_page.dart';
 import 'package:alumnex/alumnex_index_page.dart';
-import 'package:alumnex/alumnex_reg_page.dart';
+// import 'package:alumnex/alumnex_reg_page.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class AlumnexLoginPage extends StatefulWidget {
   const AlumnexLoginPage({super.key});
@@ -152,7 +155,7 @@ class _AlumnexLoginPageState extends State<AlumnexLoginPage> {
                   children: [
                     ElevatedButton(
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: accentColor,
+                        backgroundColor: secondaryColor,
                         foregroundColor: Colors.white,
                         padding: const EdgeInsets.symmetric(
                           horizontal: 24,
@@ -166,7 +169,7 @@ class _AlumnexLoginPageState extends State<AlumnexLoginPage> {
                         Navigator.pushReplacement(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => AlumnexRegPage(),
+                            builder: (context) => AlumnexIdCardPage(),
                           ),
                         );
                       },
@@ -177,7 +180,7 @@ class _AlumnexLoginPageState extends State<AlumnexLoginPage> {
                     ),
                     ElevatedButton(
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: secondaryColor,
+                        backgroundColor: accentColor,
                         foregroundColor: Colors.white,
                         padding: const EdgeInsets.symmetric(
                           horizontal: 24,
@@ -196,16 +199,29 @@ class _AlumnexLoginPageState extends State<AlumnexLoginPage> {
                         print(data);
                         int n = await DataBaseConnection().LoginPage(data);
                         if (200 == n) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text("User Login Success")),
-                          );
-                          Navigator.pushReplacement(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => AlumnexIndexPage(rollno : rollnoCont.text,roll : dropDownValue),
-                          ),
-                        );
-                        } else {
+  ScaffoldMessenger.of(context).showSnackBar(
+    const SnackBar(content: Text("User Login Success")),
+  );
+
+  userID = rollnoCont.text;
+  userRoll = dropDownValue;
+
+  // Save locally
+  SharedPreferences prefs = await SharedPreferences.getInstance();
+  await prefs.setString("userID", userID);
+  await prefs.setString("user", userID);
+  await prefs.setString("userRoll", userRoll);
+
+  Navigator.pushReplacement(
+    context,
+    MaterialPageRoute(
+      builder: (context) => AlumnexIndexPage(
+        rollno: rollnoCont.text,
+        roll: dropDownValue,
+      ),
+    ),
+  );
+} else {
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(
                               content: Text(

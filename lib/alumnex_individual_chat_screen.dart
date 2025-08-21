@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:alumnex/alumn_global.dart';
 import 'package:alumnex/alumnex_database_connection_page.dart';
 import 'package:alumnex/alumnex_post_page.dart';
@@ -72,11 +74,18 @@ final String apiUrl = '$urI';
 
   List<dynamic> connections = [];
   bool isLoading = true;
-
+late final Timer _timer;
 @override
 void initState() {
   super.initState();
   _loadMessages();
+  _timer = Timer.periodic(Duration(seconds: 5), (timer) => _loadMessages());
+}
+
+@override
+void dispose() {
+  _timer.cancel();
+  super.dispose();
 }
 
   Widget buildPollPost(dynamic post) {
@@ -714,7 +723,7 @@ Future<void> openSharedPost(String postId) async {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: primaryColor,
+      backgroundColor: const Color.fromARGB(255, 255, 255, 255),
       appBar: AppBar(
         backgroundColor: primaryColor,
         elevation: 4,

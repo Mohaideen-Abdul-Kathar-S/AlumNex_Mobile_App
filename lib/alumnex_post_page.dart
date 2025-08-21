@@ -3,6 +3,7 @@ import 'dart:convert';
 
 import 'package:alumnex/alumn_global.dart';
 import 'package:alumnex/alumnex_database_connection_page.dart';
+import 'package:alumnex/alumnex_postdetails_page.dart';
 import 'package:alumnex/alumnex_view_profile_page.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -10,7 +11,7 @@ import 'package:http/http.dart' as http;
 class AlumnexPostPage extends StatefulWidget {
   final String rollno;
 
-  final dynamic roll;
+  final String roll;
 
   const AlumnexPostPage({super.key, required this.rollno, required this.roll});
 
@@ -58,6 +59,7 @@ class _AlumnexPostPageState extends State<AlumnexPostPage> {
   bool isLoading = true;
   final String apiUrl = '$urI';
   List<String> likedPosts = [];
+  List<dynamic> alumniList = [];
   @override
   void initState() {
     super.initState();
@@ -65,7 +67,29 @@ class _AlumnexPostPageState extends State<AlumnexPostPage> {
     fetchConnections();
     _postsFuture = fetchPosts();
     fetchSavedPosts(rollno);
+     fetchAlumni();
   }
+
+    Future<void> fetchAlumni() async {
+    try {
+      final url = Uri.parse("$urI/api/alumni"); // change to your backend URL
+      final response = await http.get(url);
+
+      if (response.statusCode == 200) {
+        setState(() {
+          alumniList = json.decode(response.body);
+          isLoading = false;
+        });
+      } else {
+        print("❌ Failed: ${response.body}");
+        setState(() => isLoading = false);
+      }
+    } catch (e) {
+      print("⚠️ Error: $e");
+      setState(() => isLoading = false);
+    }
+  }
+
 
   Future<void> fetchSavedPosts(String rollno) async {
     print("getSavedPosts called with rollno: $rollno");
@@ -563,6 +587,65 @@ class _AlumnexPostPageState extends State<AlumnexPostPage> {
                       }).toList(),
                 ),
               ),
+              Container(
+                child: alumniList.isEmpty
+              ? const Center(child: Text("No Alumni Found"))
+              : SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: alumniList.map((alumni) {
+                   
+                      final fields = alumni['fields'] ?? {};
+                      final fullName =
+                          (fields['Full Name'] != null && fields['Full Name'] != "Nill")
+                              ? fields['Full Name']
+                              : alumni['_id'];
+                        final displayName = (fullName.length > 13)
+    ? fullName.substring(0, 8) + "..."
+    : fullName;
+
+                      return Container(
+                        width: 120,
+                        margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+                        child: Column(
+                          children: [
+                             GestureDetector(
+  onTap: () {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => AlumnexViewProfilePage(
+          temprollno: alumni['_id'],
+          temproll: alumni['roll'],
+          rollno: rollno,
+          roll: widget.roll,
+        ),
+      ),
+    );
+  },
+  child: CircleAvatar(
+    radius: 30,
+    backgroundImage: NetworkImage(
+      "$urI/get-profile/${alumni['_id']}",
+    ),
+    backgroundColor: Colors.white,
+  ),
+),
+                            const SizedBox(height: 8),
+                            Text(
+                              displayName,
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 14,
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                ),
+              ),
           Expanded(
             child: FutureBuilder<List<dynamic>>(
               future: _postsFuture,
@@ -650,12 +733,25 @@ class _AlumnexPostPageState extends State<AlumnexPostPage> {
 
                                 SizedBox(width: 10),
                                 Expanded(
-                                  child: Column(
+                                  child: GestureDetector(
+    onTap: () {
+        Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => AlumnexPostdetailsPage(
+            rollno: userID,  // or pass rollnoCont.text
+            roll: userRoll,  // or dropdownValue
+            post: post,
+          ),
+        ),
+      );
+    },
+    child : Column(
                                     crossAxisAlignment:
                                         CrossAxisAlignment.start,
                                     children: [
                                       Text(
-                                        post['title'] ?? 'Unknown',
+                                        post['rollno'] ?? '23CDR101',
                                         style: TextStyle(
                                           fontSize: 18,
                                           fontWeight: FontWeight.bold,
@@ -663,7 +759,7 @@ class _AlumnexPostPageState extends State<AlumnexPostPage> {
                                         ),
                                       ),
                                       Text(
-                                        post['content'] ?? '',
+                                        post['title'] ?? '',
                                         style: TextStyle(
                                           fontSize: 14,
                                           color: Colors.grey,
@@ -671,6 +767,8 @@ class _AlumnexPostPageState extends State<AlumnexPostPage> {
                                       ),
                                     ],
                                   ),
+                                  ),
+                    
                                 ),
                                 IconButton(
                                   onPressed: () {
